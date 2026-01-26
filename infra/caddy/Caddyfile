@@ -1,0 +1,56 @@
+formularios.localhost {
+
+    # Edge Functions - DEBE IR PRIMERO
+    handle /functions/v1/* {
+        reverse_proxy supabase-kong:8000 {
+            header_up Host {host}
+        }
+    }
+
+    # Auth
+    handle /auth/* {
+        reverse_proxy supabase-kong:8000
+    }
+
+    # REST API
+    handle /rest/* {
+        reverse_proxy supabase-kong:8000
+    }
+
+    # Storage
+    handle /storage/* {
+        reverse_proxy supabase-kong:8000
+    }
+
+    # Studio
+    handle /studio/* {
+        reverse_proxy supabase-studio:3000
+    }
+
+    # Frontend - SIEMPRE AL FINAL
+    handle {
+        root * /srv/front
+        try_files {path} /index.html
+        file_server
+    }
+
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+    }
+}
+```
+
+**⚠️ IMPORTANTE:** Las Edge Functions en Supabase self-hosted pasan por **Kong** (puerto 8000), NO directamente por el puerto 54321. Kong es el API Gateway que maneja el enrutamiento.
+
+### 5. Verificar la estructura de carpetas de las funciones
+
+La estructura debería ser:
+```
+infra/
+└── supabase/
+    └── docker/
+        └── volumes/
+            └── functions/
+                └── formulario-metadata/  ← nombre sin guion bajo
+                    └── index.ts

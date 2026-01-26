@@ -1,0 +1,32 @@
+name: app-formularios
+
+include:
+  - ./infra/supabase/docker/docker-compose.yml
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: app-formularios-caddy
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv/front:ro   # 👈 ESTA ES LA CLAVE
+      - caddy_data:/data
+      - caddy_config:/config
+
+    networks:
+      - supabase
+
+networks:
+  supabase:
+    name: supabase
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
