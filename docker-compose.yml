@@ -5,22 +5,42 @@ include:
 
 services:
   caddy:
-    image: caddy:2
+    build:
+      context: ./infra/caddy
+      dockerfile: Dockerfile
     container_name: app-formularios-caddy
     restart: unless-stopped
-
     ports:
       - "80:80"
       - "443:443"
-
     volumes:
       - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./frontend/dist:/srv/front:ro   # 👈 ESTA ES LA CLAVE
+      - ./frontend/dist:/srv/front:ro
       - caddy_data:/data
       - caddy_config:/config
-
     networks:
       - supabase
+
+  mailer:
+    container_name: supabase-mailer
+    build:
+      context: ./infra/mailer
+    restart: unless-stopped
+    environment:
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      APP_URL: https://formularios.localhost
+    networks:
+      - supabase
+
+  
+
+  
 
 networks:
   supabase:
@@ -30,3 +50,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  

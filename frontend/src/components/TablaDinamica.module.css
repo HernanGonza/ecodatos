@@ -1,0 +1,140 @@
+/* --- CONTENEDOR PRINCIPAL --- */
+.tableWrapper {
+  height: 100%;
+  background-color: var(--mantine-color-body);
+  position: relative;
+  /* Este padding es el que le da aire a todo el componente */
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* --- HEADER DE BÚSQUEDA --- */
+.searchHeader {
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+  margin-bottom: 10px;
+}
+
+:global([data-mantine-color-scheme='dark']) .searchHeader {
+  border-bottom-color: var(--mantine-color-gray-8);
+}
+
+/* --- COLUMNA STICKY (CHECKBOXES) --- */
+.stickyColumn {
+  position: sticky !important;
+  /* El left 0 ahora se refiere al inicio del padding del tableWrapper */
+  left: 0;
+  z-index: 5;
+  width: 60px;
+  min-width: 60px;
+  text-align: left !important; /* Alineamos a la izquierda para controlar el aire */
+  vertical-align: middle;
+  
+  /* IMPORTANTE: El padding-left aquí es lo que separa el checkbox del borde */
+  padding-left: 15px !important; 
+  padding-right: 0 !important;
+  
+  transition: background-color 100ms ease;
+  background-color: var(--mantine-color-gray-0) !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyColumn {
+  background-color: #1A202C !important;
+}
+
+/* --- HOVER Y SELECCIÓN --- */
+
+/* Pinta la celda sticky cuando pasas el mouse por la fila */
+tr:hover td.stickyColumn {
+  background-color: var(--mantine-color-gray-1) !important;
+}
+
+:global([data-mantine-color-scheme='dark']) tr:hover td.stickyColumn {
+  background-color: var(--mantine-color-dark-6) !important;
+}
+
+/* Pinta la celda sticky cuando la fila está seleccionada */
+.rowSelected td.stickyColumn {
+  background-color: #E6FCFF !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .rowSelected td.stickyColumn {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+}
+
+/* --- ENCABEZADO STICKY (THEAD) --- */
+.stickyHeader th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--mantine-color-gray-0) !important;
+  border-bottom: 2px solid var(--mantine-color-gray-3) !important;
+}
+
+/* El TH de la columna sticky (donde está el "Select All") */
+th.stickyColumn {
+  z-index: 11;
+  /* Mismo padding-left que las celdas para que queden alineados */
+  padding-left: 15px !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyHeader th {
+  background-color: #1A202C !important;
+  border-bottom: 2px solid var(--mantine-color-gray-8) !important;
+}
+
+/* --- TEXTOS Y CELDAS --- */
+.headerText {
+  letter-spacing: 0.05em;
+  color: var(--mantine-color-gray-7) !important;
+  white-space: nowrap;
+  font-size: 10px !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .headerText {
+  color: var(--mantine-color-gray-4) !important;
+}
+
+.cellText {
+  color: var(--mantine-color-dark-9) !important;
+  white-space: nowrap;
+}
+
+:global([data-mantine-color-scheme='dark']) .cellText {
+  color: var(--mantine-color-gray-2) !important;
+}
+
+/* --- FIX CHECKBOXES --- */
+.stickyColumn :global(.mantine-Checkbox-icon) {
+  color: var(--mantine-color-cyan-9) !important;
+}
+
+.stickyColumn :global(.mantine-Checkbox-input:checked) {
+  background-color: var(--mantine-color-cyan-6) !important;
+  border-color: var(--mantine-color-cyan-7) !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyColumn :global(.mantine-Checkbox-icon) {
+  color: #fff !important;
+}
+
+/* --- ELEMENTOS ADICIONALES --- */
+.actionPillContainer {
+  position: fixed;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.actionPill {
+  pointer-events: all;
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: var(--mantine-color-body);
+  border: 2px solid var(--mantine-color-cyan-6);
+  box-shadow: var(--mantine-shadow-xl);
+}

@@ -1,56 +1,65 @@
+{
+    admin off
+}
+
 formularios.localhost {
-
-    # Edge Functions - DEBE IR PRIMERO
+    # -------------------------------
+    # SUPABASE CORE (KONG)
+    # -------------------------------
+    handle /auth/v1/* {
+        reverse_proxy kong:8000
+    }
+    handle /rest/v1/* {
+        reverse_proxy kong:8000
+    }
+    handle /storage/v1/* {
+        reverse_proxy kong:8000
+    }
     handle /functions/v1/* {
-        reverse_proxy supabase-kong:8000 {
-            header_up Host {host}
-        }
+        reverse_proxy kong:8000
     }
-
-    # Auth
-    handle /auth/* {
-        reverse_proxy supabase-kong:8000
-    }
-
-    # REST API
-    handle /rest/* {
-        reverse_proxy supabase-kong:8000
-    }
-
-    # Storage
-    handle /storage/* {
-        reverse_proxy supabase-kong:8000
-    }
-
-    # Studio
+    # -------------------------------
+    # SUPABASE STUDIO
+    # -------------------------------
     handle /studio/* {
         reverse_proxy supabase-studio:3000
     }
-
-    # Frontend - SIEMPRE AL FINAL
+    # -------------------------------
+    # NATS MONITOR (HTTP)
+    # -------------------------------
+    handle_path /nats/monitor/* {
+        reverse_proxy supabase-nats:8222
+    }
+    # -------------------------------
+    # NATS WEBSOCKET (BYPASS TOTAL)
+    # -------------------------------
+    handle_path /nats/ws* {
+        reverse_proxy supabase-nats:4443 {
+            header_up Host {host}
+            header_up Upgrade "websocket"
+            header_up Connection "Upgrade"
+            header_up -Origin
+            header_up -Sec-WebSocket-Origin
+            header_up -Sec-Websocket-Extensions
+            header_up -X-Forwarded-For
+        }
+    }
+    # -------------------------------
+    # FRONTEND SPA
+    # -------------------------------
     handle {
         root * /srv/front
         try_files {path} /index.html
         file_server
     }
-
+    # -------------------------------
+    # HEADERS
+    # -------------------------------
     header {
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        -Strict-Transport-Security
+        Cross-Origin-Embedder-Policy "credentialless"
+        Cross-Origin-Opener-Policy "same-origin-allow-popups"
     }
 }
-```
-
-**⚠️ IMPORTANTE:** Las Edge Functions en Supabase self-hosted pasan por **Kong** (puerto 8000), NO directamente por el puerto 54321. Kong es el API Gateway que maneja el enrutamiento.
-
-### 5. Verificar la estructura de carpetas de las funciones
-
-La estructura debería ser:
-```
-infra/
-└── supabase/
-    └── docker/
-        └── volumes/
-            └── functions/
-                └── formulario-metadata/  ← nombre sin guion bajo
-                    └── index.ts

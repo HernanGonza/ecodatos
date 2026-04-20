@@ -1,9 +1,86 @@
+/* index.css - Adaptado para Mantine (sin Chakra) */
+
+/* Reset y base */
 html,
 body,
 #root {
   height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #171923; /* tu gray.900 base */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+/* Evitar saltos visuales al abrir drawers/modales */
 body {
-  margin: 0;
+  overflow-x: hidden;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Scroll global personalizado (manteniendo tu estilo cyan sutil) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.25); /* cyan sutil */
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.45);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.25) transparent;
+}
+
+/* Eliminar highlight azul en móviles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mejorar scroll en componentes de Mantine (ScrollArea, Drawer, Modal) */
+.mantine-ScrollArea-root,
+.mantine-Drawer-body,
+.mantine-Modal-body,
+.mantine-Paper-root {
+  overflow: auto !important;
+}
+
+/* Forzar z-index alto para notificaciones de Mantine (si usás @mantine/notifications) */
+.mantine-Notifications-root,
+.mantine-Notification-root {
+  z-index: 99999 !important;
+}
+
+/* Opcional: si querés que el scroll thumb sea más visible en modo light */
+@media (prefers-color-scheme: light) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 150, 150, 0.35); /* cyan más oscuro en light */
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 150, 150, 0.55);
+  }
+}
+
+[data-mantine-color-scheme='dark'] body {
+  color: white;
+  background-color: #171923;
+}
+
+[data-mantine-color-scheme='light'] body {
+  color: #1A202C; /* gray.800 de chakra para texto en modo claro */
+  background-color: #f7fafc; /* fondo claro */
 }

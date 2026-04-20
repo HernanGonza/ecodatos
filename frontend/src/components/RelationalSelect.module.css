@@ -1,0 +1,89 @@
+.wrapper {
+    width: 100%;
+}
+
+.selectLabel {
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--mantine-color-dimmed);
+}
+
+/* Input principal */
+.selectInput {
+    background-color: var(--mantine-color-white) !important;
+    border: 1px solid var(--mantine-color-gray-3) !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: var(--mantine-color-black) !important; /* Forzamos negro en light */
+}
+
+:global([data-mantine-color-scheme='dark']) .selectInput {
+    background-color: #1A202C !important;
+    border-color: var(--mantine-color-gray-8) !important;
+    color: var(--mantine-color-gray-2) !important;
+}
+
+.selectInput:focus {
+    border-color: var(--mantine-color-cyan-6) !important;
+    box-shadow: 0 0 0 1px var(--mantine-color-cyan-6);
+}
+
+/* Dropdown / Menú de opciones */
+.selectDropdown {
+    background-color: var(--mantine-color-white) !important;
+    border: 1px solid var(--mantine-color-gray-3) !important;
+    border-radius: 8px;
+    box-shadow: var(--mantine-shadow-lg);
+}
+
+:global([data-mantine-color-scheme='dark']) .selectDropdown {
+    background-color: #1A202C !important;
+    border-color: var(--mantine-color-gray-8) !important;
+}
+
+/* Opciones individuales - Atacamos el color con máxima prioridad */
+.selectOption {
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    margin: 2px 4px;
+    /* Forzamos el color de texto para que sea visible en Light Mode */
+    color: var(--mantine-color-gray-9) !important; 
+}
+
+:global([data-mantine-color-scheme='dark']) .selectOption {
+    color: var(--mantine-color-dark-0) !important;
+}
+
+/* Estado seleccionada: Siempre fondo Cyan y texto Blanco */
+.selectOption[data-selected] {
+    background-color: var(--mantine-color-cyan-6) !important;
+    color: var(--mantine-color-white) !important;
+}
+
+/* Hover en Light Mode */
+.selectOption:hover:not([data-selected]),
+.selectOption[data-combobox-selected]:not([data-selected]) {
+    background-color: var(--mantine-color-cyan-0) !important;
+    color: var(--mantine-color-cyan-9) !important;
+}
+
+/* Hover en Dark Mode */
+:global([data-mantine-color-scheme='dark']) .selectOption:hover:not([data-selected]) {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+    color: var(--mantine-color-cyan-2) !important;
+}
+
+/* Esto arregla el texto dentro del buscador cuando el Select es searchable */
+.selectInput::placeholder {
+    color: var(--mantine-color-gray-5) !important;
+}
+
+.loaderWrapper {
+    display: flex;
+    align-items: center;
+    padding-left: 2px;
+    margin-top: 4px;
+}

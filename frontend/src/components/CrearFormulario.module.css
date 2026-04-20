@@ -1,0 +1,82 @@
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+.title {
+    font-family: var(--mantine-font-family-headings);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    /* Usa el color de texto principal del tema activo */
+    color: var(--mantine-color-text);
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--mantine-color-dimmed);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+/* Estilo de Input adaptable */
+.inputField {
+    background-color: var(--mantine-color-default) !important;
+    border: 1px solid var(--mantine-color-default-border) !important;
+    color: var(--mantine-color-text) !important;
+    transition: border-color 0.2s ease;
+}
+
+.inputField:focus {
+    border-color: var(--mantine-color-cyan-filled) !important;
+}
+
+/* Panel de Sección adaptable */
+.sectionPaper {
+    background-color: var(--mantine-color-body);
+    border: 1px solid var(--mantine-color-default-border) !important;
+    padding: 24px;
+    border-radius: var(--mantine-radius-md);
+    margin-bottom: 20px;
+}
+
+.sectionTitle {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--mantine-color-cyan-filled);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--mantine-color-default-border);
+    padding-bottom: 6px;
+}
+
+/* Botón Principal */
+.submitButton {
+    height: 50px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background-color: var(--mantine-color-cyan-filled) !important;
+    color: var(--mantine-color-white) !important;
+}
+
+/* Botones de la Pregunta Inicial */
+.choiceButton {
+    height: 60px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    /* Si es light, texto oscuro; si es dark, texto blanco */
+    color: var(--mantine-color-text) !important;
+}
+
+.helperText {
+    font-size: 11px;
+    color: var(--mantine-color-dimmed);
+    margin-top: 8px;
+}

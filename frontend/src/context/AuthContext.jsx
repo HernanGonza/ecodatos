@@ -8,13 +8,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // sesión inicial
     supabase.auth.getSession().then(({ data }) => {
       setUser(data?.session?.user ?? null)
       setLoading(false)
     })
 
-    // cambios de auth
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null)
@@ -26,8 +24,11 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Nueva función para cerrar sesión
+  const signOut = () => supabase.auth.signOut()
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   )

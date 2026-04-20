@@ -1,0 +1,97 @@
+.title {
+    font-family: var(--mantine-font-family-headings);
+    font-weight: 800;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    color: var(--mantine-color-text); /* Dinámico */
+    font-size: 1.75rem;
+}
+
+[data-mantine-color-scheme='dark'] .title {
+    color: var(--mantine-color-white);
+}
+
+.label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--mantine-color-dimmed);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+/* --- FIX DE INPUTS Y SELECTS --- */
+.inputField {
+    /* Forzamos el color de fondo según el tema */
+    background-color: var(--mantine-color-body) !important;
+    border: 1px solid var(--mantine-color-default-border) !important;
+    border-radius: var(--mantine-radius-md) !important;
+    transition: all 0.2s cubic-bezier(.08,.52,.52,1);
+    
+    /* CLAVE: Forzamos el color del texto para que NO sea blanco en light mode */
+    color: var(--mantine-color-text) !important; 
+}
+
+/* Específicamente para el texto dentro de los Select y TextInput en Light Mode */
+:global([data-mantine-color-scheme='light']) .inputField {
+    color: var(--mantine-color-black) !important;
+    background-color: var(--mantine-color-white) !important;
+    border-color: var(--mantine-color-gray-3) !important;
+}
+
+.inputField:focus {
+    border-color: var(--mantine-color-cyan-5) !important;
+    box-shadow: 0 0 0 1px var(--mantine-color-cyan-5);
+}
+
+/* --- PANEL DE GEOGRAFÍA --- */
+.geoPaper {
+    background-color: var(--mantine-color-default);
+    border: 1px solid var(--mantine-color-default-border) !important;
+    box-shadow: var(--mantine-shadow-lg);
+}
+
+[data-mantine-color-scheme='dark'] .geoPaper {
+    background-color: var(--mantine-color-dark-7);
+}
+
+.geoTitle {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--mantine-color-cyan-6);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.mapPlaceholder {
+    border: 1px dashed var(--mantine-color-gray-7);
+    /* En modo claro, el placeholder del mapa no debe ser negro */
+    background-color: var(--mantine-color-gray-1) !important;
+}
+
+[data-mantine-color-scheme='dark'] .mapPlaceholder {
+    background-color: var(--mantine-color-dark-9) !important;
+}
+
+/* --- BOTÓN DE ENVÍO --- */
+.submitButton {
+    height: 56px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background-color: var(--mantine-color-cyan-6) !important;
+    color: var(--mantine-color-white) !important; /* Siempre blanco por contraste */
+    border-radius: var(--mantine-radius-md);
+    box-shadow: var(--mantine-shadow-md);
+    transition: all 0.2s cubic-bezier(.08,.52,.52,1);
+}
+
+.submitButton:hover:not(:disabled) {
+    background-color: var(--mantine-color-cyan-7) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--mantine-shadow-lg);
+}
+
+.formHeader {
+    min-height: 90px;
+}

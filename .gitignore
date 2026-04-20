@@ -38,3 +38,24 @@ Thumbs.db
 # Supabase
 .branches
 .temp
+
+# Supabase volumes adicionales
+infra/supabase/docker/volumes/api/
+infra/supabase/docker/volumes/pooler/
+infra/supabase/docker/volumes/nats/
+
+# Repo oficial de supabase (no necesitamos subir esto)
+infra/supabase/apps/
+infra/supabase/packages/
+infra/supabase/examples/
+infra/supabase/blocks/
+infra/supabase/e2e/
+infra/supabase/supa-mdx-lint/
+infra/supabase/scripts/
+infra/supabase/.github/
+
+# Nginx (no va a producción)
+nginx/
+
+# Caddy runtime
+infra/caddy-root.crt

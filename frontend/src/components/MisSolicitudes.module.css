@@ -1,0 +1,124 @@
+.tableWrapper {
+  height: 100%;
+  background-color: var(--mantine-color-body);
+  position: relative;
+}
+
+.searchHeader {
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+}
+
+:global([data-mantine-color-scheme='dark']) .searchHeader {
+  border-bottom-color: var(--mantine-color-gray-8);
+}
+
+/* --- FIX PARA COLUMNA DE CHECKS FIJA (STIKY LEFT) --- */
+.stickyColumn {
+  position: sticky !important;
+  left: 0;
+  z-index: 5; /* Por encima de las celdas normales */
+  background-color: var(--mantine-color-gray-0) !important;
+  width: 50px;
+  min-width: 50px;
+  text-align: center;
+  /* Sutil sombra para indicar que el contenido pasa por debajo */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyColumn {
+  background-color: #1A202C !important;
+}
+
+/* Cuando la fila está seleccionada, el fondo sticky debe cambiar también */
+.rowSelected .stickyColumn {
+  background-color: #E6FCFF !important; /* Un cyan muy clarito */
+}
+
+:global([data-mantine-color-scheme='dark']) .rowSelected .stickyColumn {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+}
+
+/* --- FIX PARA ENCABEZADO STICKY (TOP) --- */
+.stickyHeader th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--mantine-color-gray-0) !important;
+  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
+
+/* El Header de la columna fija necesita un Z-INDEX mayor (intersección) */
+.stickyHeader th.stickyColumn {
+  z-index: 11;
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyHeader th {
+  background-color: #1A202C !important;
+  border-bottom: 1px solid var(--mantine-color-gray-8) !important;
+}
+
+/* --- RESTO DE ESTILOS --- */
+.headerText {
+  letter-spacing: 0.05em;
+  color: var(--mantine-color-gray-7) !important;
+  white-space: nowrap; /* Para que no se rompan los títulos */
+}
+
+:global([data-mantine-color-scheme='dark']) .headerText {
+  color: var(--mantine-color-gray-4) !important;
+}
+
+.cellText {
+  color: var(--mantine-color-dark-9) !important;
+  white-space: nowrap;
+}
+
+:global([data-mantine-color-scheme='dark']) .cellText {
+  color: var(--mantine-color-gray-2) !important;
+}
+
+.actionPillContainer {
+  position: fixed;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.actionPill {
+  pointer-events: all;
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: var(--mantine-color-body);
+  border: 2px solid var(--mantine-color-cyan-6);
+  box-shadow: var(--mantine-shadow-xl);
+}
+
+.stickyColumn {
+  position: sticky !important;
+  left: 0;
+  z-index: 5;
+  background-color: var(--mantine-color-gray-0) !important;
+  width: 50px;
+  min-width: 50px;
+  text-align: center;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+:global([data-mantine-color-scheme='dark']) .stickyColumn {
+  background-color: #1A202C !important;
+}
+
+.rowSelected .stickyColumn {
+  background-color: #E6FCFF !important;
+}
+
+/* Agregado para mejorar la visualización de los tipos de solicitud */
+.headerText {
+  letter-spacing: 0.05em;
+  color: var(--mantine-color-gray-7) !important;
+  white-space: nowrap;
+}

@@ -1,0 +1,193 @@
+.container {
+  animation: fadeIn 0.4s ease;
+  padding: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Secciones del panel izquierdo ── */
+.panelSection {
+  background-color: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-gray-2);
+  padding: 0.875rem 1rem;
+  border-radius: var(--mantine-radius-md);
+}
+[data-mantine-color-scheme='dark'] .panelSection {
+  background-color: var(--mantine-color-dark-7);
+  border-color: var(--mantine-color-dark-5);
+}
+
+/* ── Variable extra row ── */
+.extraVarRow {
+  background-color: var(--mantine-color-gray-0);
+  border: 1px solid var(--mantine-color-gray-2);
+  border-radius: var(--mantine-radius-sm);
+  padding: 6px 8px;
+}
+[data-mantine-color-scheme='dark'] .extraVarRow {
+  background-color: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-dark-4);
+}
+
+/* ── Botones tipo de gráfico ── */
+.chartTypeBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-gray-3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--mantine-color-dimmed);
+  background-color: transparent;
+  user-select: none;
+}
+[data-mantine-color-scheme='dark'] .chartTypeBtn {
+  border-color: var(--mantine-color-dark-4);
+}
+.chartTypeBtn:hover:not(.chartTypeBtnDisabled) {
+  border-color: var(--mantine-color-cyan-6);
+  color: var(--mantine-color-cyan-6);
+  background-color: var(--mantine-color-cyan-0);
+}
+[data-mantine-color-scheme='dark'] .chartTypeBtn:hover:not(.chartTypeBtnDisabled) {
+  background-color: var(--mantine-color-dark-5);
+}
+.chartTypeBtnActive {
+  border-color: var(--mantine-color-cyan-6) !important;
+  background-color: var(--mantine-color-cyan-0) !important;
+  color: var(--mantine-color-cyan-7) !important;
+  font-weight: 700;
+}
+[data-mantine-color-scheme='dark'] .chartTypeBtnActive {
+  background-color: var(--mantine-color-dark-5) !important;
+  color: var(--mantine-color-cyan-4) !important;
+}
+.chartTypeBtnDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Área del gráfico ── */
+.chartArea {
+  background-color: var(--mantine-color-body);
+  overflow: hidden;
+}
+[data-mantine-color-scheme='dark'] .chartArea {
+  background-color: var(--mantine-color-dark-7);
+}
+
+/* ── Cabecera del reporte ── */
+.chartHeader {
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+}
+[data-mantine-color-scheme='dark'] .chartHeader {
+  border-bottom-color: var(--mantine-color-dark-4);
+}
+
+/* ── Canvas del gráfico ── */
+.chartCanvasContainer {
+  height: 420px;
+  width: 100%;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+}
+
+/* ── Tabla ── */
+.tabla {
+  border-top: none !important;
+}
+.tabla > thead > tr > th {
+  background-color: var(--mantine-color-gray-1) !important;
+  color: var(--mantine-color-dark-6) !important;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+[data-mantine-color-scheme='dark'] .tabla > thead > tr > th {
+  background-color: var(--mantine-color-dark-6) !important;
+  color: var(--mantine-color-gray-4) !important;
+}
+.tabla > tbody > tr > td {
+  color: var(--mantine-color-dark-6);
+}
+[data-mantine-color-scheme='dark'] .tabla > tbody > tr > td {
+  color: var(--mantine-color-gray-2);
+}
+
+/* ── Fila de total ── */
+.totalRow td {
+  background-color: var(--mantine-color-cyan-0) !important;
+  border-top: 2px solid var(--mantine-color-cyan-3) !important;
+  font-weight: 800;
+}
+[data-mantine-color-scheme='dark'] .totalRow td {
+  background-color: var(--mantine-color-dark-5) !important;
+  border-top-color: var(--mantine-color-cyan-8) !important;
+}
+
+/* ── Flatpickr input ── */
+.flatpickrInput {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--mantine-radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid var(--mantine-color-gray-4);
+  background-color: #ffffff;
+  color: #1A202C;
+  margin-top: 4px;
+}
+[data-mantine-color-scheme='dark'] .flatpickrInput {
+  background-color: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-dark-4);
+  color: #E2E8F0;
+}
+.flatpickrInput::placeholder { color: #A0AEC0; }
+.flatpickrInput:focus {
+  border-color: var(--mantine-color-cyan-6);
+  box-shadow: 0 0 0 1px var(--mantine-color-cyan-6);
+}
+
+/* ── Flatpickr modo oscuro ── */
+:global(.flatpickr-dark .flatpickr-calendar),
+:global(.flatpickr-dark.flatpickr-calendar) {
+  background: #2D3748; border-color: #4A5568;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4); color: #E2E8F0;
+}
+:global(.flatpickr-dark .flatpickr-months),
+:global(.flatpickr-dark .flatpickr-month) {
+  background: #1A202C; color: #E2E8F0; fill: #E2E8F0;
+}
+:global(.flatpickr-dark .flatpickr-weekday) { background: #1A202C; color: #718096; }
+:global(.flatpickr-dark .flatpickr-day) { color: #E2E8F0; }
+:global(.flatpickr-dark .flatpickr-day:hover),
+:global(.flatpickr-dark .flatpickr-day.prevMonthDay:hover),
+:global(.flatpickr-dark .flatpickr-day.nextMonthDay:hover) { background: #4A5568; border-color: #4A5568; }
+:global(.flatpickr-dark .flatpickr-day.selected),
+:global(.flatpickr-dark .flatpickr-day.selected:hover),
+:global(.flatpickr-dark .flatpickr-day.startRange),
+:global(.flatpickr-dark .flatpickr-day.endRange),
+:global(.flatpickr-dark .flatpickr-day.inRange) { background: #00B5D8; border-color: #00B5D8; color: #ffffff; }
+:global(.flatpickr-dark .flatpickr-day.inRange) { background: #086F83; border-color: #086F83; }
+:global(.flatpickr-dark .flatpickr-day.prevMonthDay),
+:global(.flatpickr-dark .flatpickr-day.nextMonthDay) { color: #4A5568; }
+:global(.flatpickr-dark .numInput),
+:global(.flatpickr-dark .cur-year),
+:global(.flatpickr-dark .flatpickr-current-month) { color: #E2E8F0 !important; }
+:global(.flatpickr-dark .arrowUp::after),
+:global(.flatpickr-dark .arrowDown::after) { border-bottom-color: #E2E8F0; border-top-color: #E2E8F0; }
+:global(.flatpickr-dark .flatpickr-prev-month svg),
+:global(.flatpickr-dark .flatpickr-next-month svg) { fill: #E2E8F0; }
+:global(.flatpickr-dark .flatpickr-prev-month:hover svg),
+:global(.flatpickr-dark .flatpickr-next-month:hover svg) { fill: #00B5D8; }

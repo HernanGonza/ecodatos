@@ -1,0 +1,51 @@
+.mainWrapper {
+    /* Mantiene el espacio de la barra de scroll siempre visible para evitar saltos */
+    scrollbar-gutter: stable;
+    /* Fuerza que el scroll principal esté siempre activo */
+    overflow-y: scroll !important;
+    min-height: 100vh;
+}
+
+.areaFormCard {
+    transition: all 0.2s ease;
+}
+
+.areaFormCard:hover {
+    border-color: var(--mantine-color-cyan-6);
+    transform: translateX(8px);
+}
+
+.cardHover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.cardHover:hover {
+    transform: translateY(-8px);
+    border-color: var(--mantine-color-cyan-6);
+    box-shadow: var(--mantine-shadow-xl);
+}
+
+@media (min-width: 1600px) {
+    .cardHover {
+        min-height: 220px;
+    }
+}
+
+/* Forzamos la alineación del título del Drawer */
+.drawerCustom :global(.mantine-Drawer-header) {
+    /* 32px suele ser el "sweet spot" para alinear con contenedores md + padding de tabla */
+    padding-left: 32px !important; 
+    padding-top: 20px;
+    background-color: transparent; /* O el color de fondo que prefieras */
+}
+
+/* Si querés centrarlo, usá esta variante en lugar de la anterior */
+.drawerCentrado :global(.mantine-Drawer-header) {
+    justify-content: center;
+}
+
+.drawerCentrado :global(.mantine-Drawer-title) {
+    width: 100%;
+    text-align: center;
+    margin-right: -40px; /* Compensa el ancho del botón de cerrar para que el texto quede al centro real */
+}
