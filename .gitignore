@@ -59,3 +59,49 @@ nginx/
 
 # Caddy runtime
 infra/caddy-root.crt
+# Dumps de migración
+auth_users.sql
+data.sql
+infra/data.sql
+
+# Cliente nats
+nats
+
+# Resto del repo oficial de supabase
+infra/supabase/.cursor/
+infra/supabase/.cursorignore
+infra/supabase/.dockerignore
+infra/supabase/.gitignore
+infra/supabase/.misspell-fixer.ignore
+infra/supabase/.npmrc
+infra/supabase/.nvmrc
+infra/supabase/.prettierignore
+infra/supabase/.prettierrc
+infra/supabase/CONTRIBUTING.md
+infra/supabase/DEVELOPERS.md
+infra/supabase/LICENSE
+infra/supabase/Makefile
+infra/supabase/README.md
+infra/supabase/SECURITY.md
+infra/supabase/i18n/
+infra/supabase/knip.jsonc
+infra/supabase/package.json
+infra/supabase/pnpm-lock.yaml
+infra/supabase/pnpm-workspace.yaml
+infra/supabase/supa-mdx-lint.config.toml
+infra/supabase/supabase/
+infra/supabase/tsconfig.json
+infra/supabase/turbo.json
+infra/supabase/docker/.env.backup
+infra/supabase/docker/.env.example
+infra/supabase/docker/.gitignore
+infra/supabase/docker/CHANGELOG.md
+infra/supabase/docker/LICENSE
+infra/supabase/docker/README.md
+infra/supabase/docker/dev/
+infra/supabase/docker/docker-compose.backup.yml
+infra/supabase/docker/docker-compose.s3.yml
+infra/supabase/docker/reset.sh
+infra/supabase/docker/utils/
+infra/supabase/docker/versions.md
+infra/supabase/docker/volumes/
