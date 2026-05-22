@@ -11,7 +11,6 @@ export default function App() {
       <Route path="/" element={<Login />} />
       <Route path="/recuperacion" element={<Recuperacion />} />
 
-      {/* Formularios maneja sus propias sub-rutas internamente */}
       <Route
         path="/formularios/*"
         element={
@@ -21,13 +20,20 @@ export default function App() {
         }
       />
 
+      {/* NUEVO: ruta integrada dentro del flujo principal */}
       <Route
-        path="/mapas"
+        path="/formularios/mapa"
         element={
           <ProtectedRoute>
             <MapaGeolytic />
           </ProtectedRoute>
         }
+      />
+
+      {/* Ruta vieja /mapas — la dejamos como redirect por si había bookmarks */}
+      <Route
+        path="/mapas"
+        element={<Navigate to="/formularios/mapa" replace />}
       />
 
       <Route path="*" element={<Navigate to="/" />} />

@@ -37,6 +37,7 @@ import {
   IconUserPlus,
   IconSettingsAutomation,
   IconDownload,
+  IconMap2,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useNavigate, useMatch } from "react-router-dom";
@@ -625,6 +626,27 @@ await fetchMobileApps();
               </Group>
             </Card>
           )}
+
+          {/* TARJETA VISOR DE MAPAS — visible para todos */}
+<Card withBorder radius="md" p="xl" className={classes.cardHover}>
+  <CustomThemeIcon color="teal">
+    <IconMap2 size={22} />
+  </CustomThemeIcon>
+  <Title order={4} mt="md" mb={4} fw={800}>
+    VISOR DE MAPAS
+  </Title>
+  <Text size="xs" c="dimmed" mb="xl">
+    Visualizá los datos georeferenciados del observatorio en el mapa interactivo.
+  </Text>
+  <Button
+    color="teal.6"
+    variant="light"
+    fullWidth
+    onClick={() => navigate('/formularios/mapa')}
+  >
+    Abrir Visor
+  </Button>
+</Card>
 
           {areas.map((area) => {
             const formsDeEstaArea = formsByArea[area.id] || [];
