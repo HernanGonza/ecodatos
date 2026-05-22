@@ -2,7 +2,8 @@
     admin off
 }
 
-formularios.localhost {
+:80 {
+    
     # -------------------------------
     # SUPABASE CORE (KONG)
     # -------------------------------
@@ -45,12 +46,19 @@ formularios.localhost {
         }
     }
     # -------------------------------
+    # FRONTEND - ASSETS
+    # -------------------------------
+    handle /assets/* {
+	root * /srv/front
+	file_server
+    }
+    # -------------------------------
     # FRONTEND SPA
     # -------------------------------
     handle {
-        root * /srv/front
-        try_files {path} /index.html
-        file_server
+	root * /srv/front
+	try_files {path} /index.html
+	file_server
     }
     # -------------------------------
     # HEADERS
