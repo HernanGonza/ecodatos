@@ -73,7 +73,8 @@ const parseDecimalToDms = (decVal) => {
 const RecenterMap = ({ lat, lon }) => {
   const map = useMap();
   useEffect(() => {
-    if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+    // Validar que sean números válidos antes de mover el mapa
+    if (lat != null && lon != null && !isNaN(lat) && !isNaN(lon) && isFinite(lat) && isFinite(lon)) {
       map.setView([lat, lon], map.getZoom());
     }
   }, [lat, lon, map]);
@@ -81,8 +82,13 @@ const RecenterMap = ({ lat, lon }) => {
 };
 
 const MapaBase = ({ lat, lon, onPositionChange, readOnly, height = "100%" }) => {
+  // Parsear y validar coordenadas
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lon);
+  
+  // Coordenadas por defecto (ej: centro de Argentina) si son inválidas
+  const safeLat = (isNaN(latitude) || !isFinite(latitude)) ? -34.6037 : latitude;
+  const safeLon = (isNaN(longitude) || !isFinite(longitude)) ? -58.3816 : longitude;
 
   const MapEvents = () => {
     useMapEvents({
@@ -95,9 +101,10 @@ const MapaBase = ({ lat, lon, onPositionChange, readOnly, height = "100%" }) => 
     return null;
   };
 
+  // Solo renderizar el mapa si las coordenadas son seguras
   return (
     <MapContainer 
-      center={[latitude, longitude]} 
+      center={[safeLat, safeLon]}  // ← Usar coordenadas validadas
       zoom={15} 
       style={{ height: height, width: '100%' }}
       scrollWheelZoom={true}
@@ -105,17 +112,20 @@ const MapaBase = ({ lat, lon, onPositionChange, readOnly, height = "100%" }) => 
     >
       <RecenterMap lat={latitude} lon={longitude} />
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Marker 
-        position={[latitude, longitude]} 
-        draggable={!readOnly}
-        eventHandlers={{
-          dragend: (e) => {
-            const marker = e.target;
-            const position = marker.getLatLng();
-            onPositionChange(position.lat, position.lng);
-          },
-        }}
-      />
+      {/* Solo mostrar marcador si ambas coordenadas son válidas */}
+      {!isNaN(latitude) && !isNaN(longitude) && isFinite(latitude) && isFinite(longitude) && (
+        <Marker 
+          position={[latitude, longitude]} 
+          draggable={!readOnly}
+          eventHandlers={{
+            dragend: (e) => {
+              const marker = e.target;
+              const position = marker.getLatLng();
+              onPositionChange(position.lat, position.lng);
+            },
+          }}
+        />
+      )}
       <MapEvents />
     </MapContainer>
   );
@@ -206,62 +216,86 @@ export default function FormularioDinamico({
   };
 
   const handleMapMove = (lat, lon) => {
-    setValues(prev => ({
-      ...prev,
-      latitud_decimal: lat.toFixed(6),
-      longitud_decimal: lon.toFixed(6),
-      latitud_dms: parseDecimalToDms(lat),
-      longitud_dms: parseDecimalToDms(lon)
-    }));
-  };
+  // Validar antes de actualizar el estado
+  if (isNaN(lat) || isNaN(lon) || !isFinite(lat) || !isFinite(lon)) return;
+  
+  setValues(prev => ({
+    ...prev,
+    latitud_decimal: lat.toFixed(6),
+    longitud_decimal: lon.toFixed(6),
+    latitud_dms: parseDecimalToDms(lat),
+    longitud_dms: parseDecimalToDms(lon)
+  }));
+};
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No hay sesión activa');
+  setSubmitting(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No hay sesión activa');
 
-      const isEditing = !!initialData?.id;
-      const endpoint = isEditing ? 'universal-update' : 'universal-create';
+    const isEditing = !!initialData?.id;
+    const endpoint = isEditing ? 'universal-update' : 'universal-create';
 
-      const cleanData = { ...values };
-      const systemKeys = ['id', 'created_at', 'updated_at', 'activo', 'geom', 'geometria', 'geometry', 'latitud_dms', 'longitud_dms', 'slug', 'area_id'];
-      systemKeys.forEach(key => delete cleanData[key]);
+    // 1. Campos válidos según metadata + campos técnicos permitidos
+    const validFields = new Set([
+      ...fields.map(f => f.campo),
+      'user_id', 'formulario_id', 'created_by', 'activo',
+      'latitud_decimal', 'longitud_decimal', 'departamento_id', 'municipio_id'
+    ]);
 
-      if (isEditing) {
-        delete cleanData['user_id'];
-      }
+    // 2. Claves que NUNCA se envían (sistema/derivadas)
+    const systemKeys = [
+      'id', 'created_at', 'updated_at', 'geom', 'geometria', 'geometry', 
+      'latitud_dms', 'longitud_dms', 'slug', 'area_id'
+    ];
 
-      const dataFinal = {
-        ...cleanData,
-        user_id: session.user.id,
-        latitud_decimal: values.latitud_decimal ? parseFloat(values.latitud_decimal) : null,
-        longitud_decimal: values.longitud_decimal ? parseFloat(values.longitud_decimal) : null,
-      };
+    // 3. Filtrar: solo campos válidos y no-sistema
+    const cleanData = Object.fromEntries(
+      Object.entries(values).filter(([key]) => 
+        validFields.has(key) && !systemKeys.includes(key)
+      )
+    );
 
-      const payload = {
-        t: slug.replace(/-/g, '_'),
-        id: isEditing ? initialData.id : undefined,
-        data: dataFinal,
-      };
+    // 4. Preparar payload final
+    const dataFinal = {
+      ...cleanData,
+      // user_id solo en CREATE, el backend lo maneja en UPDATE
+      ...( !isEditing && { user_id: session.user.id } ),
+      // Coordenadas como números o null
+      latitud_decimal: values.latitud_decimal ? parseFloat(values.latitud_decimal) : null,
+      longitud_decimal: values.longitud_decimal ? parseFloat(values.longitud_decimal) : null,
+    };
 
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify(payload),
-      });
+    // Debug opcional (borrar en producción)
+    console.log("📤 Enviando:", Object.keys(dataFinal));
+    const filtered = Object.keys(values).filter(k => !validFields.has(k) || systemKeys.includes(k));
+    if (filtered.length > 0) console.log("🧹 Filtrados:", filtered);
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Error en el servidor');
+    const payload = {
+      t: slug.replace(/-/g, '_'),
+      id: isEditing ? initialData.id : undefined,
+      data: dataFinal,
+    };
 
-      notifications.show({ title: 'Éxito', message: 'Registro procesado correctamente', color: 'green.5' });
-      if (onSuccess) onSuccess();
-    } catch (err) {
-      notifications.show({ title: 'Error', message: err.message, color: 'red.5' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Error en el servidor');
+
+    notifications.show({ title: 'Éxito', message: 'Registro procesado correctamente', color: 'green.5' });
+    if (onSuccess) onSuccess();
+  } catch (err) {
+    console.error("❌ Error en handleSubmit:", err);
+    notifications.show({ title: 'Error', message: err.message, color: 'red.5' });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) {
     return (
@@ -462,14 +496,22 @@ export default function FormularioDinamico({
                         classNames={{ input: classes.inputField }}
                       />
                       <NumberInput
-                        placeholder="Decimal"
-                        value={values.latitud_decimal ?? ''}
-                        onChange={val => handleInputChange('latitud_decimal', val)}
-                        disabled={isEffectivelyReadOnly}
-                        precision={6}
-                        hideControls
-                        classNames={{ input: classes.inputField }}
-                      />
+  placeholder="Decimal"
+  value={values.latitud_decimal ?? ''}
+  onChange={(val) => {
+    // Permitir null/empty, pero si hay valor, validar que sea número
+    if (val === null || val === '') {
+      handleInputChange('latitud_decimal', '');
+    } else if (!isNaN(val) && isFinite(val)) {
+      handleInputChange('latitud_decimal', val);
+    }
+    // Si es inválido, no actualizar el estado (evita NaN)
+  }}
+  disabled={isEffectivelyReadOnly}
+  precision={6}
+  hideControls
+  classNames={{ input: classes.inputField }}
+/>
                     </Group>
                   </Box>
 
@@ -484,14 +526,22 @@ export default function FormularioDinamico({
                         classNames={{ input: classes.inputField }}
                       />
                       <NumberInput
-                        placeholder="Decimal"
-                        value={values.longitud_decimal ?? ''}
-                        onChange={val => handleInputChange('longitud_decimal', val)}
-                        disabled={isEffectivelyReadOnly}
-                        precision={6}
-                        hideControls
-                        classNames={{ input: classes.inputField }}
-                      />
+  placeholder="Decimal"
+  value={values.longitud_decimal ?? ''}
+  onChange={(val) => {
+    // Permitir null/empty, pero si hay valor, validar que sea número
+    if (val === null || val === '') {
+      handleInputChange('longitud_decimal', '');
+    } else if (!isNaN(val) && isFinite(val)) {
+      handleInputChange('longitud_decimal', val);
+    }
+    // Si es inválido, no actualizar el estado (evita NaN)
+  }}
+  disabled={isEffectivelyReadOnly}
+  precision={6}
+  hideControls
+  classNames={{ input: classes.inputField }}
+/>
                     </Group>
                   </Box>
 
