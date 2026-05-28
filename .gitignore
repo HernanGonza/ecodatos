@@ -108,3 +108,14 @@ infra/supabase/docker/volumes/
 infra/supabase/.agents/
 infra/supabase/.claude/
 infra/supabase/.mcp.json
+
+# Archivos del repo oficial de Supabase
+infra/caddy/Caddyfile.bak
+infra/supabase/docker/docker-compose.caddy.yml
+infra/supabase/docker/docker-compose.nginx.yml
+infra/supabase/docker/docker-compose.pg17.yml
+infra/supabase/docker/docker-compose.rustfs.yml
+infra/supabase/docker/tests/
+infra/supabase/patches/
+infra/supabase/prettier.config.mjs
+infra/supabase/turbo.jsonc

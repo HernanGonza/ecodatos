@@ -5,7 +5,7 @@ import {
   Tooltip, Modal, Stack, TextInput, Select, Alert
 } from '@mantine/core';
 import {
-  IconEye, IconEdit, IconTrash, IconX, IconAlertTriangle, 
+  IconEye, IconEdit, IconTrash, IconX, IconAlertTriangle,
   IconSearch, IconSelector, IconChevronUp, IconChevronDown,
   IconUserPlus, IconCheck, IconClock, IconPencil, IconInfoCircle
 } from '@tabler/icons-react';
@@ -26,13 +26,13 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState({});
-  
+
   // Seguridad: Control de permisos
   const [esEditorDelForm, setEsEditorDelForm] = useState(true);
-  
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState([]);
-  
+
   const [bulkReassignOpen, setBulkReassignOpen] = useState(false);
   const [tecnicos, setTecnicos] = useState([]);
   const [selectedTecnico, setSelectedTecnico] = useState(null);
@@ -59,8 +59,8 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
           .eq('user_id', session.user.id)
           .eq('formulario_id', formulario.id)
           .maybeSingle();
-        
-        // Si no existe registro es porque es admin o no tiene acceso, 
+
+        // Si no existe registro es porque es admin o no tiene acceso,
         // pero por seguridad si existe y es_editor es false, bloqueamos.
         setEsEditorDelForm(permiso ? permiso.es_editor : true);
       } else {
@@ -102,7 +102,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       const { error } = await supabase.functions.invoke('universal-update', {
         body: {
           t: formulario.slug,
-          ids: selectedIds, 
+          ids: selectedIds,
           data: { user_id: selectedTecnico }
         },
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -110,7 +110,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
 
       if (error) throw error;
       notifications.show({ title: 'Éxito', message: `Reasignados ${selectedIds.length} registros`, color: 'blue' });
-      
+
       setBulkReassignOpen(false);
       setRowSelection({});
       fetchData();
@@ -128,14 +128,14 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       const { data: { session } } = await supabase.auth.getSession();
       const isUserTable = formulario.slug === "users";
       const endpoint = isUserTable ? "users-delete" : "universal-delete";
-      
+
       const { error } = await supabase.functions.invoke(endpoint, {
         body: { ids: idsToDelete, tabla: formulario.slug },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
-      
+
       setData(prev => prev.filter(r => !idsToDelete.includes(String(r.id || r.user_id))));
       setRowSelection({});
       notifications.show({ title: "Registros eliminados correctamente", color: 'blue' });
@@ -149,7 +149,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
   const columns = useMemo(() => {
   const sample = data[0] || {};
   const isUserTable = formulario.slug === "users";
-  
+
   const columnTranslations = {
     created_at: "CREADO",
     updated_at: "ÚLTIMA VEZ ACTUALIZADO",
@@ -176,18 +176,14 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
 
     // Ocultar otros campos internos que no queremos mostrar
     const hiddenFields = [
-      "id", 
-      "user_id", 
-      "rol_id", 
-      "formulario_id", 
-      "created_by", 
-      "activo", 
-      "geom", 
+      "id",
+      "user_id",
+      "rol_id",
+      "formulario_id",
+      "created_by",
+      "activo",
+      "geom",
       "area_id",
-      "latitud_decimal",
-      "longitud_decimal",
-      "latitud_dms",
-      "longitud_dms",
       "ciudad_temp"
     ];
 
@@ -234,16 +230,16 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       header: columnTranslations[key] || key.replace(/_/g, ' ').toUpperCase(),
       cell: info => {
         const val = info.getValue();
-        
+
         if (isUserTable && (key === "areas" || key === "formularios") && Array.isArray(val)) {
           if (val.length === 0) return <Text size="xs" c="dimmed">Ninguno</Text>;
           return (
             <Group gap={4}>
               {val.map((item, idx) => (
                 <Tooltip key={idx} label={item.es_editor ? "Editor" : "Lector"} withArrow>
-                  <Badge variant="light" color={item.es_editor ? "brand" : "blue"} size="xs" radius="xs" 
+                  <Badge variant="light" color={item.es_editor ? "brand" : "blue"} size="xs" radius="xs"
                          leftSection={item.es_editor ? <IconPencil size={10} /> : <IconEye size={10} />}>
-                    {item.id.split('-')[0]} 
+                    {item.id.split('-')[0]}
                   </Badge>
                 </Tooltip>
               ))}
@@ -319,8 +315,8 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
             {table.getHeaderGroups().map(headerGroup => (
               <Table.Tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <Table.Th 
-                    key={header.id} 
+                  <Table.Th
+                    key={header.id}
                     className={header.id === 'select' ? classes.stickyColumn : ''}
                     onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                     style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
@@ -344,8 +340,8 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
             {table.getRowModel().rows.map(row => (
               <Table.Tr key={row.id} className={row.getIsSelected() ? classes.rowSelected : ''}>
                 {row.getVisibleCells().map(cell => (
-                  <Table.Td 
-                    key={cell.id} 
+                  <Table.Td
+                    key={cell.id}
                     className={cell.column.id === 'select' ? classes.stickyColumn : ''}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
