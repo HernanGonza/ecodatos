@@ -81,16 +81,20 @@
   white-space: nowrap;
   user-select: none;
   overflow: hidden;
+  border-right: 1px solid var(--mantine-color-gray-3);
 }
 
 :global([data-mantine-color-scheme='dark']) .th {
   background-color: var(--mantine-color-dark-6);
   border-bottom-color: var(--mantine-color-dark-4);
+    border-right-color: var(--mantine-color-dark-4);
+
 }
 
 .thContent {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 10px 12px;
   height: 40px;
@@ -105,6 +109,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
 }
 
 :global([data-mantine-color-scheme='dark']) .headerText {
@@ -163,14 +168,17 @@
 
 .td {
   padding: 0 12px;
-  border-bottom: 1px solid var(--mantine-color-gray-1);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  border-right: 1px solid var(--mantine-color-gray-2);
   vertical-align: middle;
   overflow: hidden;
   height: 48px;
+  text-align: center;
 }
 
 :global([data-mantine-color-scheme='dark']) .td {
-  border-bottom-color: var(--mantine-color-dark-5);
+  border-bottom-color: var(--mantine-color-dark-4);
+  border-right-color: var(--mantine-color-dark-5);
 }
 
 .cellText {
@@ -257,4 +265,16 @@
   .actionPill {
     padding: 8px 16px;
   }
+}
+
+.rowResizeHandle {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background 150ms ease;
+  width: 100%;
+}
+
+.rowResizeHandle:hover {
+  background: var(--mantine-color-cyan-4);
 }
