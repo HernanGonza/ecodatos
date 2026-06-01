@@ -119,3 +119,5 @@ infra/supabase/docker/tests/
 infra/supabase/patches/
 infra/supabase/prettier.config.mjs
 infra/supabase/turbo.jsonc
+.env
+.env

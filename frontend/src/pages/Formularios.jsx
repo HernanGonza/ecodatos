@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   Box,
   Title,
@@ -61,6 +61,8 @@ export default function Formularios() {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
   const navigate = useNavigate();
+  const tablaRef = useRef(null);
+  
 
   // --- LEER URL ---
   const matchArea        = useMatch("/formularios/area/:areaKey");
@@ -78,6 +80,7 @@ export default function Formularios() {
   const matchUsersRegistro    = useMatch("/formularios/usuarios/registro/:recordId");
   const matchUsersRegistroVer = useMatch("/formularios/usuarios/registro/:recordId/ver");
   const [mobileApps, setMobileApps] = useState([]);
+  
 
   // Parámetros activos — los matches más específicos tienen prioridad
   const activeAreaKey = matchRegistroVer?.params.areaKey
@@ -111,6 +114,7 @@ export default function Formularios() {
   const [selectedArea, setSelectedArea] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [displayName, setDisplayName] = useState("");
+  
 
   // --- ESTADOS PASSWORD ---
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -465,7 +469,7 @@ await fetchMobileApps();
 
   return (
     <Box
-      minH="100vh"
+      style={{ minHeight: '100vh' }}
       bg={isDark ? "gray.9" : "gray.0"}
       p="md"
       className={classes.mainWrapper}
@@ -937,30 +941,29 @@ await fetchMobileApps();
       </Drawer>
 
       <Drawer
-        opened={tableDrawerOpen}
-        onClose={closeDrawer}
-        size="100%"
-        position="right"
-        lockScroll={false}
-        transitionProps={drawerTransition}
-        className={classes.drawerCustom}
-        title={
-          
-            <Text fw={900} size="lg" lts="1.5px" c="cyan.5">
-              {selectedForm?.nombre?.toUpperCase()}
-            </Text>
-          
-        }
-        padding={0}
-      >
-        <Box h="100%" bg={isDark ? "gray.9" : "white"}>
-          <TablaDinamica
-            formulario={selectedForm}
-            onEdit={(rec) => handleOpenForm(selectedForm, rec, false)}
-            onView={(rec) => handleOpenForm(selectedForm, rec, true)}
-          />
-        </Box>
-      </Drawer>
+  opened={tableDrawerOpen}
+  onClose={closeDrawer}
+  size="100%"
+  position="right"
+  lockScroll={false}
+  transitionProps={drawerTransition}
+  className={classes.drawerCustom}
+  title={
+    <Text fw={900} size="lg" lts="1.5px" c="cyan.5">
+      {selectedForm?.nombre?.toUpperCase()}
+    </Text>
+  }
+  padding={0}
+>
+  <Box h="100%" bg={isDark ? "gray.9" : "white"}>
+    <TablaDinamica
+      ref={tablaRef}  // ← AGREGAR ESTO
+      formulario={selectedForm}
+      onEdit={(rec) => handleOpenForm(selectedForm, rec, false)}
+      onView={(rec) => handleOpenForm(selectedForm, rec, true)}
+    />
+  </Box>
+</Drawer>
 
       <Drawer
         opened={formDrawerOpen}
@@ -1000,13 +1003,19 @@ await fetchMobileApps();
             />
           ) : (
             <FormularioDinamico
-              slug={selectedForm?.slug}
-              initialData={selectedRecord}
-              readOnly={isReadOnly}
-              onSuccess={() => {
-                closeDrawer();
-              }}
-            />
+  slug={selectedForm?.slug}
+  initialData={selectedRecord}
+  readOnly={isReadOnly}
+  onSuccess={() => {
+    closeDrawer();
+    // Intentar refresh vía ref, fallback a fetchData si no está disponible
+    if (tablaRef.current?.refresh) {
+      tablaRef.current.refresh();
+    } else {
+      fetchData();
+    }
+  }}
+/>
           )}
         </ScrollArea>
       </Drawer>
