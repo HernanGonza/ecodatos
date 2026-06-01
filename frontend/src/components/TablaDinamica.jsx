@@ -25,6 +25,8 @@ import {
   Select,
   Alert,
   Paper,
+  Popover,
+  Switch,
 } from "@mantine/core";
 import {
   IconEye,
@@ -40,6 +42,7 @@ import {
   IconClock,
   IconPencil,
   IconInfoCircle,
+  IconLayoutColumns,
 } from "@tabler/icons-react";
 import {
   useReactTable,
@@ -145,10 +148,15 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
   const [selectedTecnico, setSelectedTecnico] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [columnSizing, setColumnSizing] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState({})
   const [rowHeights, setRowHeights] = useState({});
 
   const scrollRef = useRef(null);
   const isOrphanMode = formulario?.isOrphanMode;
+
+  const [hasScrollRight, setHasScrollRight] = useState(false)
+
+
 
   useImperativeHandle(ref, () => ({ refresh: () => fetchData() }));
 
@@ -379,21 +387,35 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
   }, [data, isOrphanMode, formulario.slug, esEditorDelForm]);
 
   const table = useReactTable({
-    data,
-    columns,
-    state: { sorting, globalFilter, rowSelection, columnSizing },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
-    onColumnSizingChange: setColumnSizing,
-    columnResizeMode: "onChange",
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getRowId: (row) => String(row.id || row.user_id),
-  });
+  data,
+  columns,
+  state: { sorting, globalFilter, rowSelection, columnSizing, columnVisibility },
+  onSortingChange: setSorting,
+  onGlobalFilterChange: setGlobalFilter,
+  onRowSelectionChange: setRowSelection,
+  onColumnSizingChange: setColumnSizing,
+  onColumnVisibilityChange: setColumnVisibility,
+  columnResizeMode: 'onChange',
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getRowId: (row) => String(row.id || row.user_id),
+  filterFns: {},
+})
 
   const { rows } = table.getRowModel();
+  useEffect(() => {
+  const el = scrollRef.current
+  if (!el) return
+  const check = () => setHasScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2)
+  check()
+  el.addEventListener('scroll', check)
+  window.addEventListener('resize', check)
+  return () => {
+    el.removeEventListener('scroll', check)
+    window.removeEventListener('resize', check)
+  }
+}, [rows])
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -434,25 +456,64 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
 
       {/* Barra de búsqueda + contador */}
       <Box className={classes.searchHeader}>
-        <Group justify="space-between" align="center">
-          <TextInput
-            placeholder="Buscar en todos los campos..."
-            leftSection={<IconSearch size={15} />}
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+  <Group justify="space-between" align="center">
+    <Group gap="sm">
+      <TextInput
+        placeholder="Buscar en todos los campos..."
+        leftSection={<IconSearch size={15} />}
+        value={globalFilter ?? ''}
+        onChange={e => setGlobalFilter(e.target.value)}
+        size="sm"
+        radius="md"
+        style={{ width: 320 }}
+      />
+      <Popover width={220} position="bottom-start" shadow="md" radius="md">
+        <Popover.Target>
+          <Button
+            variant="light"
+            color="gray"
             size="sm"
             radius="md"
-            style={{ width: 320 }}
-          />
-          <Text size="xs" c="dimmed" fw={600}>
-            {table.getFilteredRowModel().rows.length} registros
-            {globalFilter && ` · filtrando "${globalFilter}"`}
-          </Text>
-        </Group>
-      </Box>
+            leftSection={<IconLayoutColumns size={15} />}
+          >
+            Columnas
+          </Button>
+        </Popover.Target>
+        <Popover.Dropdown>
+          <Stack gap="xs">
+            <Text size="xs" fw={700} c="dimmed" lts="0.5px">COLUMNAS VISIBLES</Text>
+            {table.getAllLeafColumns()
+              .filter(col => col.id !== 'select' && col.id !== 'estado_huerfano')
+              .map(col => (
+                <Switch
+                  key={col.id}
+                  size="sm"
+                  label={
+                    <Text size="xs" fw={500}>
+                      {typeof col.columnDef.header === 'string'
+                        ? col.columnDef.header
+                        : col.id.replace(/_/g, ' ').toUpperCase()}
+                    </Text>
+                  }
+                  checked={col.getIsVisible()}
+                  onChange={col.getToggleVisibilityHandler()}
+                  color="cyan"
+                />
+              ))}
+          </Stack>
+        </Popover.Dropdown>
+      </Popover>
+    </Group>
+    <Text size="xs" c="dimmed" fw={600}>
+      {table.getFilteredRowModel().rows.length} registros
+      {globalFilter && ` · filtrando "${globalFilter}"`}
+    </Text>
+  </Group>
+</Box>
 
       {/* Tabla virtualizada */}
-      <Box className={classes.tableScrollContainer}>
+      <Box className={classes.tableScrollContainer}style={{ position: 'relative' }}>
+  {hasScrollRight && <div className={classes.scrollShadowRight} />}
         <div
           ref={scrollRef}
           className={classes.scrollContainer}
@@ -467,49 +528,44 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
-                      key={header.id}
-                      className={`${classes.th} ${header.id === "select" ? classes.stickyColumn : ""}`}
-                      style={{ width: header.getSize(), position: "relative" }}
-                    >
-                      <div
-                        className={classes.thContent}
-                        onClick={
-                          header.column.getCanSort()
-                            ? header.column.getToggleSortingHandler()
-                            : undefined
-                        }
-                        style={{
-                          cursor: header.column.getCanSort()
-                            ? "pointer"
-                            : "default",
-                        }}
-                      >
-                        <span className={classes.headerText}>
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                        </span>
-                        {header.column.getCanSort() && (
-                          <span className={classes.sortIcon}>
-                            {{
-                              asc: <IconChevronUp size={12} />,
-                              desc: <IconChevronDown size={12} />,
-                            }[header.column.getIsSorted()] ?? (
-                              <IconSelector size={12} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      {/* Resize handle */}
-                      {header.column.getCanResize() && (
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          className={`${classes.resizeHandle} ${header.column.getIsResizing() ? classes.resizeHandleActive : ""}`}
-                        />
-                      )}
-                    </th>
+  key={header.id}
+  className={`${classes.th} ${header.id === 'select' ? classes.stickyColumn : ''}`}
+  style={{ width: header.getSize(), position: 'relative' }}
+>
+  <div
+    className={classes.thContent}
+    onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
+    style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+  >
+    <span className={classes.headerText}>
+      {flexRender(header.column.columnDef.header, header.getContext())}
+    </span>
+    {header.column.getCanSort() && (
+      <span className={classes.sortIcon}>
+        {{ asc: <IconChevronUp size={12} />, desc: <IconChevronDown size={12} /> }
+          [header.column.getIsSorted()] ?? <IconSelector size={12} />}
+      </span>
+    )}
+  </div>
+  {/* Filtro por columna */}
+  {header.column.getCanFilter() && header.id !== 'select' && header.id !== 'estado_huerfano' && (
+    <div className={classes.columnFilter} onClick={e => e.stopPropagation()}>
+      <input
+        className={classes.columnFilterInput}
+        value={header.column.getFilterValue() ?? ''}
+        onChange={e => header.column.setFilterValue(e.target.value)}
+        placeholder="filtrar..."
+      />
+    </div>
+  )}
+  {header.column.getCanResize() && (
+    <div
+      onMouseDown={header.getResizeHandler()}
+      onTouchStart={header.getResizeHandler()}
+      className={`${classes.resizeHandle} ${header.column.getIsResizing() ? classes.resizeHandleActive : ''}`}
+    />
+  )}
+</th>
                   ))}
                 </tr>
               ))}
@@ -528,6 +584,11 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
                     className={`${classes.tr} ${row.getIsSelected() ? classes.rowSelected : ""}`}
                     style={{ height: rowHeights[row.id] || ROW_HEIGHT }}
                     onClick={() => row.toggleSelected()}
+                    onDoubleClick={(e) => { 
+  e.stopPropagation()
+  row.toggleSelected()
+  onView(data.find(r => String(r.id || r.user_id) === row.id))
+}}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
