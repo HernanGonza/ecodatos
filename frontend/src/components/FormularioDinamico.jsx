@@ -133,8 +133,8 @@ const MapaBase = ({ lat, lon, onPositionChange, readOnly, height = "100%" }) => 
 
 const CAMPOS_EXCLUIDOS = [
   'id', 'created_at', 'created_by', 'user_id', 'formulario_id', 'updated_at', 
-  'geom', 'geometria', 'geometry', 'latitud_dms', 'longitud_dms', 
-  'latitud_decimal', 'longitud_decimal', 'activo',
+  'geom', 'geometria', 'geometry', 'latitud_gms', 'longitud_gms', 
+  'latitud_decimal', 'longitud_decimal', 'activo', 'fotos', 'audios', 'ciudad_temp',
 ];
 
 export default function FormularioDinamico({
@@ -172,6 +172,7 @@ export default function FormularioDinamico({
         );
         const json = await res.json();
         const filteredFields = (json.fields ?? []).filter(f => !CAMPOS_EXCLUIDOS.includes(f.campo));
+        console.log('📋 Campos metadata:', filteredFields.map(f => ({ campo: f.campo, tipo: f.tipo })));
         setFields(filteredFields);
 
         const fData = {};
@@ -200,16 +201,16 @@ export default function FormularioDinamico({
     setValues(prev => {
       const next = { ...prev, [campo]: valor };
       if (campo === 'departamento_id') next.municipio_id = '';
-      if (campo === 'latitud_dms') {
+      if (campo === 'latitud_gms') {
         const dec = parseDmsToDecimal(valor);
         if (dec !== '') next.latitud_decimal = dec;
       } else if (campo === 'latitud_decimal') {
-        next.latitud_dms = parseDecimalToDms(valor);
-      } else if (campo === 'longitud_dms') {
+        next.latitud_gms = parseDecimalToDms(valor);
+      } else if (campo === 'longitud_gms') {
         const dec = parseDmsToDecimal(valor);
         if (dec !== '') next.longitud_decimal = dec;
       } else if (campo === 'longitud_decimal') {
-        next.longitud_dms = parseDecimalToDms(valor);
+        next.longitud_gms = parseDecimalToDms(valor);
       }
       return next;
     });
@@ -223,8 +224,8 @@ export default function FormularioDinamico({
     ...prev,
     latitud_decimal: lat.toFixed(6),
     longitud_decimal: lon.toFixed(6),
-    latitud_dms: parseDecimalToDms(lat),
-    longitud_dms: parseDecimalToDms(lon)
+    latitud_gms: parseDecimalToDms(lat),
+    longitud_gms: parseDecimalToDms(lon)
   }));
 };
 
@@ -246,8 +247,7 @@ export default function FormularioDinamico({
 
     // 2. Claves que NUNCA se envían (sistema/derivadas)
     const systemKeys = [
-      'id', 'created_at', 'updated_at', 'geom', 'geometria', 'geometry', 
-      'latitud_dms', 'longitud_dms', 'slug', 'area_id'
+      'id', 'created_at', 'updated_at', 'geom', 'geometria', 'geometry', 'slug', 'area_id'
     ];
 
     // 3. Filtrar: solo campos válidos y no-sistema
@@ -265,6 +265,8 @@ export default function FormularioDinamico({
       // Coordenadas como números o null
       latitud_decimal: values.latitud_decimal ? parseFloat(values.latitud_decimal) : null,
       longitud_decimal: values.longitud_decimal ? parseFloat(values.longitud_decimal) : null,
+      latitud_gms: values.latitud_gms || null,
+  longitud_gms: values.longitud_gms || null,
     };
 
     // Debug opcional (borrar en producción)
@@ -376,11 +378,11 @@ export default function FormularioDinamico({
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
               {fields.map(f => {
                 const isBoolean = f.tipo === 'boolean';
+                const isTime = f.tipo === 'time without time zone' || f.tipo === 'time' || f.tipo === 'time with time zone';
                 const isDate = f.tipo === 'date' || f.tipo?.includes('timestamp');
                 const isNumber = f.tipo === 'integer' || f.tipo === 'numeric' || f.tipo === 'double precision';
 
                 const commonProps = {
-                  key: f.campo,
                   label: f.label || f.campo.replace(/_/g, ' ').toUpperCase(),
                   disabled: isEffectivelyReadOnly,
                   required: f.requerido,
@@ -398,6 +400,7 @@ export default function FormularioDinamico({
 
                   return (
                     <Select
+                     key={f.campo}
                       {...commonProps}
                       placeholder={deshabilitado ? 'Seleccione Departamento' : 'Seleccionar...'}
                       value={values[f.campo] ? String(values[f.campo]) : null}
@@ -417,6 +420,7 @@ export default function FormularioDinamico({
                 if (isBoolean) {
                   return (
                     <Select
+                     key={f.campo}
                       {...commonProps}
                       value={values[f.campo] === true ? 'true' : values[f.campo] === false ? 'false' : ''}
                       onChange={val => handleInputChange(f.campo, val === '' ? null : val === 'true')}
@@ -429,9 +433,23 @@ export default function FormularioDinamico({
                   );
                 }
 
+                if (isTime) {
+  return (
+    <TextInput
+     key={f.campo}
+      {...commonProps}
+      type="time"
+      value={values[f.campo] || ''}
+      onChange={e => handleInputChange(f.campo, e.target.value)}
+      step="1"
+    />
+  );
+}
+
                 if (isDate) {
                   return (
                     <TextInput
+                     key={f.campo}
                       {...commonProps}
                       type="date"
                       value={values[f.campo] || ''}
@@ -440,9 +458,12 @@ export default function FormularioDinamico({
                   );
                 }
 
+                
+
                 if (isNumber) {
                   return (
                     <NumberInput
+                     key={f.campo}
                       {...commonProps}
                       value={values[f.campo] ?? ''}
                       onChange={val => handleInputChange(f.campo, val)}
@@ -454,6 +475,7 @@ export default function FormularioDinamico({
 
                 return (
                   <TextInput
+                    key={f.campo}
                     {...commonProps}
                     value={values[f.campo] || ''}
                     onChange={e => handleInputChange(f.campo, e.target.value)}
@@ -490,8 +512,8 @@ export default function FormularioDinamico({
                     <Group grow gap="xs">
                       <TextInput
                         placeholder="GMS"
-                        value={values.latitud_dms || ''}
-                        onChange={e => handleInputChange('latitud_dms', e.target.value)}
+                        value={values.latitud_gms || ''}
+                        onChange={e => handleInputChange('latitud_gms', e.target.value)}
                         disabled={isEffectivelyReadOnly}
                         classNames={{ input: classes.inputField }}
                       />
@@ -520,8 +542,8 @@ export default function FormularioDinamico({
                     <Group grow gap="xs">
                       <TextInput
                         placeholder="GMS"
-                        value={values.longitud_dms || ''}
-                        onChange={e => handleInputChange('longitud_dms', e.target.value)}
+                        value={values.longitud_gms || ''}
+                        onChange={e => handleInputChange('longitud_gms', e.target.value)}
                         disabled={isEffectivelyReadOnly}
                         classNames={{ input: classes.inputField }}
                       />
@@ -548,7 +570,7 @@ export default function FormularioDinamico({
                   {!isEffectivelyReadOnly && (
                     <Group gap="xs" mt="sm">
                       <IconInfoCircle size={14} color="var(--mantine-color-gray-6)" />
-                      <Text size="xs" c="gray.6" italic>
+                      <Text size="xs" c="gray.6" fs="italic">
                         Puedes mover el marcador o expandir el mapa para más precisión.
                       </Text>
                     </Group>

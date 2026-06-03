@@ -43,6 +43,7 @@ import {
   IconPencil,
   IconInfoCircle,
   IconLayoutColumns,
+  IconPlus,
 } from "@tabler/icons-react";
 import {
   useReactTable,
@@ -134,7 +135,7 @@ const MemoizedCellWrapper = React.memo(
     prev.value === next.value && prev.columnKey === next.columnKey,
 );
 
-const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
+const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState([]);
@@ -169,7 +170,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      if (formulario.slug !== "users") {
+      if (formulario?.slug !== "users") {
         const { data: permiso } = await supabase
           .from("usuarios_formularios")
           .select("es_editor")
@@ -182,10 +183,10 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       }
 
       let endpoint =
-        formulario.slug === "users"
+        formulario?.slug === "users"
           ? "users-list"
-          : `universal-list?t=${formulario.slug}`;
-      if (isOrphanMode && formulario.slug !== "users")
+          : `universal-list?t=${formulario?.slug}`;
+      if (isOrphanMode && formulario?.slug !== "users")
         endpoint += `&orphans=true`;
 
       const { data: res, error } = await supabase.functions.invoke(endpoint, {
@@ -217,8 +218,8 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [formulario.slug, isOrphanMode]);
+    if (formulario?.slug) fetchData(); 
+}, [formulario?.slug, isOrphanMode]);
 
   const handleBulkReassign = async () => {
     if (!selectedTecnico) return;
@@ -230,7 +231,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       const selectedIds = Object.keys(rowSelection);
       const { error } = await supabase.functions.invoke("universal-update", {
         body: {
-          t: formulario.slug,
+          t: formulario?.slug,
           ids: selectedIds,
           data: { user_id: selectedTecnico },
         },
@@ -263,11 +264,11 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const isUserTable = formulario.slug === "users";
+      const isUserTable = formulario?.slug === "users";
       const { error } = await supabase.functions.invoke(
         isUserTable ? "users-delete" : "universal-delete",
         {
-          body: { ids: idsToDelete, tabla: formulario.slug },
+          body: { ids: idsToDelete, tabla: formulario?.slug },
           headers: { Authorization: `Bearer ${session.access_token}` },
         },
       );
@@ -293,7 +294,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
 
   const columns = useMemo(() => {
     const sample = data[0] || {};
-    const isUserTable = formulario.slug === "users";
+    const isUserTable = formulario?.slug === "users";
     const columnTranslations = {
       created_at: "CREADO",
       updated_at: "ACTUALIZADO",
@@ -384,7 +385,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
     });
 
     return cols;
-  }, [data, isOrphanMode, formulario.slug, esEditorDelForm]);
+  }, [data, isOrphanMode, formulario?.slug, esEditorDelForm]);
 
   const table = useReactTable({
   data,
@@ -503,6 +504,18 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView }, ref) => {
           </Stack>
         </Popover.Dropdown>
       </Popover>
+      {esEditorDelForm && onNew && (
+    <Button
+      variant="filled"
+      color="cyan"
+      size="sm"
+      radius="md"
+      leftSection={<IconPlus size={15} />}
+      onClick={onNew}
+    >
+      Nuevo
+    </Button>
+  )}
     </Group>
     <Text size="xs" c="dimmed" fw={600}>
       {table.getFilteredRowModel().rows.length} registros

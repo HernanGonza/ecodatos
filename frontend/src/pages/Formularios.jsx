@@ -65,6 +65,7 @@ export default function Formularios() {
   
 
   // --- LEER URL ---
+  const matchNuevoDesdeTabla = useMatch("/formularios/area/:areaKey/tabla/:formSlug/nuevo")
   const matchArea        = useMatch("/formularios/area/:areaKey");
   const matchTabla       = useMatch("/formularios/area/:areaKey/tabla/:formSlug");
   const matchStats       = useMatch("/formularios/area/:areaKey/stats/:formSlug");
@@ -98,9 +99,9 @@ export default function Formularios() {
 
   // Flags de apertura
   const areaModalOpen              = !!(matchArea || matchTabla || matchStats || matchRegistro || matchRegistroVer || matchNuevo);
-  const tableDrawerOpen            = !!(matchTabla || matchRegistro || matchRegistroVer || matchUsersTabla || matchUsersRegistro || matchUsersRegistroVer);
+  const tableDrawerOpen = !!(matchTabla || matchRegistro || matchRegistroVer || matchNuevoDesdeTabla || matchUsersTabla || matchUsersRegistro || matchUsersRegistroVer)
   const statsDrawerOpen            = !!matchStats;
-  const formDrawerOpen             = !!(matchRegistro || matchRegistroVer || matchNuevo || matchUsersNuevo || matchUsersRegistro || matchUsersRegistroVer);
+  const formDrawerOpen = !!(matchRegistro || matchRegistroVer || matchNuevo || matchNuevoDesdeTabla || matchUsersNuevo || matchUsersRegistro || matchUsersRegistroVer)
   const solicitudDrawerOpen        = !!matchSolicitud;
   const misSolicitudesDrawerOpen   = !!matchMisSol;
   const solicitudesAdminDrawerOpen = !!matchSolAdmin;
@@ -147,12 +148,17 @@ export default function Formularios() {
     } else if (matchUsersNuevo) {
       // Nuevo usuario desde card → volver al inicio (no a la tabla)
       navigate("/formularios");
-    } else if (matchUsersTabla) {
+    } 
+     else if (matchNuevoDesdeTabla) {
+  navigate(`/formularios/area/${matchNuevoDesdeTabla.params.areaKey}/tabla/${matchNuevoDesdeTabla.params.formSlug}`)
+}
+    else if (matchUsersTabla) {
       navigate("/formularios");
-    } else {
+    } 
+    else {
       navigate("/formularios");
     }
-  }, [navigate, matchRegistro, matchRegistroVer, matchNuevo, matchTabla, matchStats, matchUsersNuevo, matchUsersTabla, matchUsersRegistro, matchUsersRegistroVer]);
+  }, [navigate, matchRegistro, matchRegistroVer, matchNuevo, matchNuevoDesdeTabla, matchTabla, matchStats, matchUsersNuevo, matchUsersTabla, matchUsersRegistro, matchUsersRegistroVer]);
 
   // --- TRANSICIÓN CUSTOM PARA DRAWERS ---
   const drawerTransition = {
@@ -373,11 +379,28 @@ await fetchMobileApps();
       };
       fetchRecord();
     }
+    if (matchNuevoDesdeTabla && formularios.length > 0) {
+  const form = formularios.find(f => f.slug === matchNuevoDesdeTabla.params.formSlug)
+  if (form) {
+    setSelectedForm(form)
+    setSelectedRecord(null)
+    setIsReadOnly(false)
+  }
+}
   }, [loading, activeAreaKey, activeFormSlug, areas, formularios, formsByArea,
       matchUsersTabla, matchUsersNuevo, matchUsersRegistro, matchUsersRegistroVer,
-      matchRegistro, matchRegistroVer, selectedRecord, fetchMobileApps]);
+      matchRegistro, matchRegistroVer, matchNuevoDesdeTabla, selectedRecord, fetchMobileApps]);
 
   // --- HANDLERS UI ---
+  const handleNewFromTable = (form) => {
+  setSelectedForm(form)
+  setSelectedRecord(null)
+  setIsReadOnly(false)
+  const area = areas.find((a) => a.id === form.area_id)
+  if (!area) return
+  navigate(`/formularios/area/${area.key}/tabla/${form.slug}/nuevo`)
+}
+
   const handleOpenArea = (areaId) => {
     const areaObj = areas.find((a) => a.id === areaId);
     setSelectedArea({ ...areaObj, forms: formsByArea[areaId] });
@@ -961,6 +984,7 @@ await fetchMobileApps();
       formulario={selectedForm}
       onEdit={(rec) => handleOpenForm(selectedForm, rec, false)}
       onView={(rec) => handleOpenForm(selectedForm, rec, true)}
+      onNew={() => handleNewFromTable(selectedForm)}
     />
   </Box>
 </Drawer>
@@ -1007,14 +1031,13 @@ await fetchMobileApps();
   initialData={selectedRecord}
   readOnly={isReadOnly}
   onSuccess={() => {
-    closeDrawer();
-    // Intentar refresh vía ref, fallback a fetchData si no está disponible
+  closeDrawer();
+  setTimeout(() => {
     if (tablaRef.current?.refresh) {
       tablaRef.current.refresh();
-    } else {
-      fetchData();
     }
-  }}
+  }, 300);
+}}
 />
           )}
         </ScrollArea>
