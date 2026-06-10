@@ -84,7 +84,6 @@ const parseDecimalToDms = (decVal) => {
 const RecenterMap = ({ lat, lon }) => {
   const map = useMap();
   useEffect(() => {
-    // Validar que sean números válidos antes de mover el mapa
     if (
       lat != null &&
       lon != null &&
@@ -106,11 +105,9 @@ const MapaBase = ({
   readOnly,
   height = "100%",
 }) => {
-  // Parsear y validar coordenadas
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lon);
 
-  // Coordenadas por defecto (ej: centro de Argentina) si son inválidas
   const safeLat = isNaN(latitude) || !isFinite(latitude) ? -34.6037 : latitude;
   const safeLon =
     isNaN(longitude) || !isFinite(longitude) ? -58.3816 : longitude;
@@ -126,10 +123,9 @@ const MapaBase = ({
     return null;
   };
 
-  // Solo renderizar el mapa si las coordenadas son seguras
   return (
     <MapContainer
-      center={[safeLat, safeLon]} // ← Usar coordenadas validadas
+      center={[safeLat, safeLon]}
       zoom={15}
       style={{ height: height, width: "100%" }}
       scrollWheelZoom={true}
@@ -137,7 +133,6 @@ const MapaBase = ({
     >
       <RecenterMap lat={latitude} lon={longitude} />
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {/* Solo mostrar marcador si ambas coordenadas son válidas */}
       {!isNaN(latitude) &&
         !isNaN(longitude) &&
         isFinite(latitude) &&
@@ -198,21 +193,20 @@ export default function FormularioDinamico({
   });
   const [inlineAddValue, setInlineAddValue] = useState("");
   const [inlineAddLoading, setInlineAddLoading] = useState(false);
+  const [foreignDataLoaded, setForeignDataLoaded] = useState(false);
 
-  // Permite pasar de vista a edición sin salir del drawer
   const [isEditingLocally, setIsEditingLocally] = useState(false);
-
-  // El formulario está en modo solo-lectura real si la prop lo dice Y el usuario no activó edición local
   const isEffectivelyReadOnly = readOnly && !isEditingLocally;
 
-  // Resetear edición local cuando cambia el registro
   useEffect(() => {
     setIsEditingLocally(false);
   }, [initialData?.id]);
 
+  // 1. Cargar metadata y datos foráneos
   useEffect(() => {
     const fetchMetadata = async () => {
       setLoading(true);
+      setForeignDataLoaded(false);
       try {
         const {
           data: { session },
@@ -224,10 +218,6 @@ export default function FormularioDinamico({
         const json = await res.json();
         const filteredFields = (json.fields ?? []).filter(
           (f) => !CAMPOS_EXCLUIDOS.includes(f.campo),
-        );
-        console.log(
-          "📋 Campos metadata:",
-          filteredFields.map((f) => ({ campo: f.campo, tipo: f.tipo })),
         );
         setFields(filteredFields);
 
@@ -246,9 +236,7 @@ export default function FormularioDinamico({
           }
         }
         setForeignData(fData);
-
-        if (initialData) setValues(initialData);
-        else setValues({});
+        setForeignDataLoaded(true);
       } catch (err) {
         console.error(err);
         notifications.show({
@@ -261,7 +249,39 @@ export default function FormularioDinamico({
       }
     };
     if (slug) fetchMetadata();
-  }, [slug, initialData]);
+  }, [slug]);
+
+  // 2. Cargar datos del formulario (con reparación de campos faltantes)
+  useEffect(() => {
+    const loadData = async () => {
+      if (foreignDataLoaded) {
+        let finalData = initialData ? { ...initialData } : {};
+
+        // 🔧 REPARACIÓN: Si estamos en modo edición, obtenemos el registro completo
+        // de la BD por si la vista de lista (universal-list) omitió campos como departamento_id
+        if (initialData?.id && slug) {
+          try {
+            const tableName = slug.replace(/-/g, "_");
+            const { data: fullRecord, error } = await supabase
+              .from(tableName)
+              .select("*")
+              .eq("id", initialData.id)
+              .single();
+
+            if (!error && fullRecord) {
+              // Fusionamos: priorizamos los datos completos de la BD
+              finalData = { ...fullRecord, ...initialData };
+            }
+          } catch (err) {
+            console.error("Error cargando registro completo para edición:", err);
+          }
+        }
+
+        setValues(finalData);
+      }
+    };
+    loadData();
+  }, [foreignDataLoaded, initialData, slug]);
 
   const handleInputChange = (campo, valor) => {
     setValues((prev) => {
@@ -283,7 +303,6 @@ export default function FormularioDinamico({
   };
 
   const handleMapMove = (lat, lon) => {
-    // Validar antes de actualizar el estado
     if (isNaN(lat) || isNaN(lon) || !isFinite(lat) || !isFinite(lon)) return;
 
     setValues((prev) => ({
@@ -339,7 +358,6 @@ export default function FormularioDinamico({
       const isEditing = !!initialData?.id;
       const endpoint = isEditing ? "universal-update" : "universal-create";
 
-      // 1. Campos válidos según metadata + campos técnicos permitidos
       const validFields = new Set([
         ...fields.map((f) => f.campo),
         "user_id",
@@ -352,7 +370,6 @@ export default function FormularioDinamico({
         "municipio_id",
       ]);
 
-      // 2. Claves que NUNCA se envían (sistema/derivadas)
       const systemKeys = [
         "id",
         "created_at",
@@ -364,19 +381,15 @@ export default function FormularioDinamico({
         "area_id",
       ];
 
-      // 3. Filtrar: solo campos válidos y no-sistema
       const cleanData = Object.fromEntries(
         Object.entries(values).filter(
           ([key]) => validFields.has(key) && !systemKeys.includes(key),
         ),
       );
 
-      // 4. Preparar payload final
       const dataFinal = {
         ...cleanData,
-        // user_id solo en CREATE, el backend lo maneja en UPDATE
         ...(!isEditing && { user_id: session.user.id }),
-        // Coordenadas como números o null
         latitud_decimal: values.latitud_decimal
           ? parseFloat(values.latitud_decimal)
           : null,
@@ -386,13 +399,6 @@ export default function FormularioDinamico({
         latitud_gms: values.latitud_gms || null,
         longitud_gms: values.longitud_gms || null,
       };
-
-      // Debug opcional (borrar en producción)
-      console.log("📤 Enviando:", Object.keys(dataFinal));
-      const filtered = Object.keys(values).filter(
-        (k) => !validFields.has(k) || systemKeys.includes(k),
-      );
-      if (filtered.length > 0) console.log("🧹 Filtrados:", filtered);
 
       const payload = {
         t: slug.replace(/-/g, "_"),
@@ -480,7 +486,6 @@ export default function FormularioDinamico({
         <Box p="xl" pos="relative">
           <Stack gap="xl">
             <Box>
-              {/* Línea 1: título solo */}
               <Title order={2} className={classes.title} mb={8}>
                 {isEffectivelyReadOnly
                   ? "Vista de Registro"
@@ -488,7 +493,6 @@ export default function FormularioDinamico({
                     ? "Editar Registro"
                     : "Nuevo Registro"}
               </Title>
-              {/* Línea 2: pastilla + botón — siempre presentes */}
               <Group gap="xs" mb={8}>
                 <Badge variant="dot" color="cyan.5" size="lg" radius="sm">
                   {slug.replace(/[-_]/g, " ").toUpperCase()}
@@ -508,7 +512,6 @@ export default function FormularioDinamico({
                   </Button>
                 )}
               </Group>
-              {/* Línea 3: subtítulo — siempre presente */}
               <Text size="sm" c="gray.5" fw={500}>
                 {isEffectivelyReadOnly ? (
                   "Vista de solo lectura. Usá el botón para habilitar la edición."
@@ -733,13 +736,11 @@ export default function FormularioDinamico({
                         placeholder="Decimal"
                         value={values.latitud_decimal ?? ""}
                         onChange={(val) => {
-                          // Permitir null/empty, pero si hay valor, validar que sea número
                           if (val === null || val === "") {
                             handleInputChange("latitud_decimal", "");
                           } else if (!isNaN(val) && isFinite(val)) {
                             handleInputChange("latitud_decimal", val);
                           }
-                          // Si es inválido, no actualizar el estado (evita NaN)
                         }}
                         disabled={isEffectivelyReadOnly}
                         precision={6}
@@ -767,13 +768,11 @@ export default function FormularioDinamico({
                         placeholder="Decimal"
                         value={values.longitud_decimal ?? ""}
                         onChange={(val) => {
-                          // Permitir null/empty, pero si hay valor, validar que sea número
                           if (val === null || val === "") {
                             handleInputChange("longitud_decimal", "");
                           } else if (!isNaN(val) && isFinite(val)) {
                             handleInputChange("longitud_decimal", val);
                           }
-                          // Si es inválido, no actualizar el estado (evita NaN)
                         }}
                         disabled={isEffectivelyReadOnly}
                         precision={6}
