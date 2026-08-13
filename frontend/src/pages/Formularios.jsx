@@ -183,7 +183,7 @@ export default function Formularios() {
       .from('mobile_apps')
       .select('*')
       .eq('activo', true)
-      .order('nombre');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error al cargar apps móviles:', error);
@@ -195,6 +195,12 @@ export default function Formularios() {
     console.error('Error fetching mobile apps:', err);
   }
 }, []);   // ← vacío está bien
+
+  // Una sola app (EcoAlerta) para todas las áreas: tomamos la versión activa más reciente.
+  const appMovilActual = mobileApps[0] || null;
+  const appMovilUrl = appMovilActual
+    ? supabase.storage.from("apks").getPublicUrl(appMovilActual.apk_path).data.publicUrl
+    : null;
 
   // --- LÓGICA DE DATOS ---
   const fetchData = useCallback(async () => {
@@ -675,14 +681,43 @@ await fetchMobileApps();
   </Button>
 </Card>
 
+          {/* TARJETA ÚNICA DE APP MÓVIL — visible para todos */}
+          {appMovilActual && (
+            <Card withBorder radius="md" p="xl" className={classes.cardHover}>
+              <CustomThemeIcon color="green">
+                <IconDownload size={22} />
+              </CustomThemeIcon>
+              <Group gap="xs" align="center" mt="md" mb={4}>
+                <Title order={4} fw={800}>
+                  {appMovilActual.nombre?.toUpperCase() || "APP MÓVIL"}
+                </Title>
+                {appMovilActual.version && (
+                  <Badge variant="outline" color="green" size="sm">
+                    v{appMovilActual.version}
+                  </Badge>
+                )}
+              </Group>
+              <Text size="xs" c="dimmed" mb="xl">
+                {appMovilActual.descripcion ||
+                  "App para cargar reportes de campo desde el celular, sin conexión."}
+              </Text>
+              <Button
+                leftSection={<IconDownload size={16} />}
+                color="green.7"
+                variant="light"
+                fullWidth
+                onClick={() => window.open(appMovilUrl, "_blank")}
+              >
+                Descargar APK
+              </Button>
+            </Card>
+          )}
+
           {areas.map((area) => {
             const formsDeEstaArea = formsByArea[area.id] || [];
             const tienePermisoEdicion = formsDeEstaArea.some(
               (f) => f.es_editor,
             );
-            const tieneAppsMoviles = mobileApps.some(app =>
-    formsDeEstaArea.some(form => form.slug === app.formulario_slug)
-  );
 
             return (
               <Card
@@ -719,12 +754,6 @@ await fetchMobileApps();
                       {formsDeEstaArea.length}{" "}
                       {formsDeEstaArea.length === 1 ? "FORM" : "FORMS"}
                     </Badge>
-                    {/* NUEVO BADGE DE APP MÓVIL */}
-          {tieneAppsMoviles && (
-            <Badge color="green" variant="filled" size="xs" leftSection={<IconDownload size={10} />}>
-              APP MÓVIL
-            </Badge>
-          )}
                     {!tienePermisoEdicion && (
                       <Badge variant="dot" color="blue.4" size="xs" fw={700}>
                         SÓLO LECTURA
@@ -769,91 +798,6 @@ await fetchMobileApps();
   overlayProps={{ backgroundOpacity: 0.7, blur: 10 }}
 >
   <Stack gap="xl">
-    {/* === APPS MÓVILES - PRIMERO === */}
-    {selectedArea && (
-      <Box>
-        <Group mb="md" align="center">
-          <Text size="xs" fw={700} c="gray.5" lts="1px">
-            APLICACIONES MÓVILES
-          </Text>
-          <Badge color="green" variant="light" size="sm">
-            Campo
-          </Badge>
-        </Group>
-
-        <Stack gap="md">
-          {mobileApps
-            .filter((app) =>
-              selectedArea.forms?.some((f) => f.slug === app.formulario_slug)
-            )
-            .map((app) => {
-              const { data: urlData } = supabase.storage
-                .from("apks")
-                .getPublicUrl(app.apk_path);
-
-              return (
-                <Paper
-                  key={app.id}
-                  withBorder
-                  p="lg"
-                  radius="md"
-                  bg={isDark ? "gray.9" : "gray.0"}
-                >
-                  <Group justify="space-between" wrap="nowrap" align="flex-start">
-                    <Group gap="md" wrap="nowrap" style={{ flex: 1 }}>
-                      <ThemeIcon 
-                        variant="gradient" 
-                        gradient={{ from: 'green', to: 'teal' }} 
-                        size="xl" 
-                        radius="md"
-                      >
-                        <IconDownload size={26} />
-                      </ThemeIcon>
-
-                      <Box>
-                        <Group gap="xs" align="center">
-                          <Text fw={700} size="lg">
-                            {app.nombre}
-                          </Text>
-                          {app.version && (
-                            <Badge variant="outline" color="green" size="sm">
-                              v{app.version}
-                            </Badge>
-                          )}
-                        </Group>
-                        <Text size="sm" c="dimmed" mt={4}>
-                          {app.descripcion || "Aplicación para reporte en campo"}
-                        </Text>
-                      </Box>
-                    </Group>
-
-                    <Button
-                      leftSection={<IconDownload size={18} />}
-                      color="green.7"
-                      size="md"
-                      radius="md"
-                      onClick={() => window.open(urlData.publicUrl, "_blank")}
-                    >
-                      Descargar APK
-                    </Button>
-                  </Group>
-                </Paper>
-              );
-            })}
-
-          {mobileApps.filter((app) =>
-            selectedArea.forms?.some((f) => f.slug === app.formulario_slug)
-          ).length === 0 && (
-            <Paper withBorder p="xl" radius="md" ta="center">
-              <Text c="dimmed" size="sm">
-                Próximamente disponibles aplicaciones móviles para esta área.
-              </Text>
-            </Paper>
-          )}
-        </Stack>
-      </Box>
-    )}
-
     {/* === FORMULARIOS === */}
     <Box>
       <Text size="xs" fw={700} c="gray.5" mb="md" lts="1px">
