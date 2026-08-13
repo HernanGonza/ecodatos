@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "https://deno.land/x/nats@v1.16.0/nats-base-client/sha256.js": "../_shared/vendor/sha256.js"
+  }
+}

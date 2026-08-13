@@ -104,7 +104,6 @@ infra/supabase/docker/docker-compose.s3.yml
 infra/supabase/docker/reset.sh
 infra/supabase/docker/utils/
 infra/supabase/docker/versions.md
-infra/supabase/docker/volumes/
 infra/supabase/.agents/
 infra/supabase/.claude/
 infra/supabase/.mcp.json
@@ -121,3 +120,5 @@ infra/supabase/prettier.config.mjs
 infra/supabase/turbo.jsonc
 .env
 .env
+infra/supabase/docker/volumes/proxy/
+infra/supabase/docker/volumes/snippets/
