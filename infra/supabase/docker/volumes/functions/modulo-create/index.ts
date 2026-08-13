@@ -106,6 +106,9 @@ serve(async (req) => {
         longitud_gms text,
         geom geometry(Point, 4326),
 
+        fotos text[] DEFAULT '{}'::text[],
+        audios text[] DEFAULT '{}'::text[],
+
         ${sqlCamposDinamicos ? sqlCamposDinamicos : '-- sin campos extras'}
       );
 

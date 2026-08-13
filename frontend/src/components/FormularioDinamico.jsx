@@ -29,6 +29,8 @@ import {
   IconCheck,
   IconPencil,
   IconPlus,
+  IconPhoto,
+  IconMicrophone,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { supabase } from "../lib/supabase";
@@ -186,6 +188,7 @@ export default function FormularioDinamico({
   const [submitting, setSubmitting] = useState(false);
   const [foreignData, setForeignData] = useState({});
   const [opened, { open, close }] = useDisclosure(false);
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [inlineAddModal, setInlineAddModal] = useState({
     open: false,
     field: "",
@@ -832,6 +835,84 @@ export default function FormularioDinamico({
               </SimpleGrid>
             </Paper>
 
+            {initialData?.id &&
+              (values.fotos?.length > 0 || values.audios?.length > 0) && (
+                <Paper className={classes.geoPaper} p="xl" radius="md">
+                  <Group gap="xs" mb="lg">
+                    <ThemeIcon variant="light" color="cyan.5" radius="md">
+                      <IconPhoto size={20} />
+                    </ThemeIcon>
+                    <Title order={4} className={classes.geoTitle}>
+                      FOTOS Y AUDIOS
+                    </Title>
+                  </Group>
+                  <Text size="xs" c="gray.6" mb="md">
+                    Capturados desde la app móvil. Solo lectura.
+                  </Text>
+
+                  {values.fotos?.length > 0 && (
+                    <Box mb={values.audios?.length > 0 ? "lg" : 0}>
+                      <Text size="xs" fw={700} c="gray.5" mb={8} lts="1px">
+                        FOTOS ({values.fotos.length})
+                      </Text>
+                      <Group gap="sm">
+                        {values.fotos.map((url, i) => (
+                          <Box
+                            key={i}
+                            onClick={() => setFotoAmpliada(url)}
+                            style={{
+                              width: 84,
+                              height: 84,
+                              borderRadius: 8,
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              border: "1px solid var(--mantine-color-gray-7)",
+                            }}
+                          >
+                            <img
+                              src={url}
+                              alt={`Foto ${i + 1}`}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </Box>
+                        ))}
+                      </Group>
+                    </Box>
+                  )}
+
+                  {values.audios?.length > 0 && (
+                    <Box>
+                      <Text size="xs" fw={700} c="gray.5" mb={8} lts="1px">
+                        NOTAS DE VOZ ({values.audios.length})
+                      </Text>
+                      <Stack gap="xs">
+                        {values.audios.map((url, i) => (
+                          <Group key={i} gap="xs" wrap="nowrap">
+                            <ThemeIcon
+                              variant="light"
+                              color="cyan.5"
+                              size="sm"
+                              radius="xl"
+                            >
+                              <IconMicrophone size={12} />
+                            </ThemeIcon>
+                            <audio
+                              controls
+                              src={url}
+                              style={{ height: 32, flex: 1 }}
+                            />
+                          </Group>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </Paper>
+              )}
+
             {!isEffectivelyReadOnly && (
               <Button
                 className={classes.submitButton}
@@ -890,6 +971,24 @@ export default function FormularioDinamico({
             </Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal
+        opened={!!fotoAmpliada}
+        onClose={() => setFotoAmpliada(null)}
+        size="auto"
+        centered
+        withCloseButton
+        padding={0}
+        styles={{ body: { lineHeight: 0 } }}
+      >
+        {fotoAmpliada && (
+          <img
+            src={fotoAmpliada}
+            alt="Foto ampliada"
+            style={{ maxWidth: "90vw", maxHeight: "85vh", display: "block" }}
+          />
+        )}
       </Modal>
     </>
   );

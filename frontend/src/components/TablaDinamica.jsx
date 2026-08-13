@@ -44,6 +44,7 @@ import {
   IconInfoCircle,
   IconLayoutColumns,
   IconPlus,
+  IconMicrophone,
 } from "@tabler/icons-react";
 import {
   useReactTable,
@@ -59,8 +60,66 @@ import classes from "./TablaDinamica.module.css";
 
 const ROW_HEIGHT = 48;
 
-const MemoizedCell = ({ value, columnKey, isUserTable }) => {
+const MemoizedCell = ({ value, columnKey, isUserTable, onOpenFoto }) => {
   const val = value;
+
+  if (columnKey === "fotos") {
+    if (!Array.isArray(val) || val.length === 0)
+      return (
+        <Text size="xs" c="dimmed">
+          —
+        </Text>
+      );
+    return (
+      <Group gap={4} wrap="nowrap">
+        {val.slice(0, 3).map((url, i) => (
+          <img
+            key={i}
+            src={url}
+            alt="foto"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenFoto?.(url);
+            }}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 4,
+              objectFit: "cover",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          />
+        ))}
+        {val.length > 3 && (
+          <Text size="xs" c="dimmed">
+            +{val.length - 3}
+          </Text>
+        )}
+      </Group>
+    );
+  }
+
+  if (columnKey === "audios") {
+    const n = Array.isArray(val) ? val.length : 0;
+    if (n === 0)
+      return (
+        <Text size="xs" c="dimmed">
+          —
+        </Text>
+      );
+    return (
+      <Badge
+        variant="light"
+        color="cyan"
+        size="xs"
+        radius="xs"
+        leftSection={<IconMicrophone size={10} />}
+      >
+        {n}
+      </Badge>
+    );
+  }
 
   if (
     isUserTable &&
@@ -151,6 +210,8 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
   const [columnSizing, setColumnSizing] = useState({});
   const [columnVisibility, setColumnVisibility] = useState({})
   const [rowHeights, setRowHeights] = useState({});
+  const [fotoModalUrl, setFotoModalUrl] = useState(null);
+  const abrirFotoModal = useCallback((url) => setFotoModalUrl(url), []);
 
   const scrollRef = useRef(null);
   const isOrphanMode = formulario?.isOrphanMode;
@@ -370,22 +431,25 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
     }
 
     keys.forEach((key) => {
+      const isMedia = key === "fotos" || key === "audios";
       cols.push({
         accessorKey: key,
         header: columnTranslations[key] || key.replace(/_/g, " ").toUpperCase(),
-        size: key === "created_at" || key === "updated_at" ? 160 : 180,
+        size: key === "created_at" || key === "updated_at" ? 160 : isMedia ? 110 : 180,
+        enableSorting: !isMedia,
         cell: (info) => (
           <MemoizedCellWrapper
             value={info.getValue()}
             columnKey={key}
             isUserTable={isUserTable}
+            onOpenFoto={abrirFotoModal}
           />
         ),
       });
     });
 
     return cols;
-  }, [data, isOrphanMode, formulario?.slug, esEditorDelForm]);
+  }, [data, isOrphanMode, formulario?.slug, esEditorDelForm, abrirFotoModal]);
 
   const table = useReactTable({
   data,
@@ -848,6 +912,24 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
             </Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal
+        opened={!!fotoModalUrl}
+        onClose={() => setFotoModalUrl(null)}
+        size="auto"
+        centered
+        withCloseButton
+        padding={0}
+        styles={{ body: { lineHeight: 0 } }}
+      >
+        {fotoModalUrl && (
+          <img
+            src={fotoModalUrl}
+            alt="Foto ampliada"
+            style={{ maxWidth: "90vw", maxHeight: "85vh", display: "block" }}
+          />
+        )}
       </Modal>
     </Box>
   );
