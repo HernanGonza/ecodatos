@@ -681,37 +681,38 @@ await fetchMobileApps();
   </Button>
 </Card>
 
-          {/* TARJETA ÚNICA DE APP MÓVIL — visible para todos */}
-          {appMovilActual && (
-            <Card withBorder radius="md" p="xl" className={classes.cardHover}>
-              <CustomThemeIcon color="green">
-                <IconDownload size={22} />
-              </CustomThemeIcon>
-              <Group gap="xs" align="center" mt="md" mb={4}>
-                <Title order={4} fw={800}>
-                  {appMovilActual.nombre?.toUpperCase() || "APP MÓVIL"}
-                </Title>
-                {appMovilActual.version && (
-                  <Badge variant="outline" color="green" size="sm">
-                    v{appMovilActual.version}
-                  </Badge>
-                )}
-              </Group>
-              <Text size="xs" c="dimmed" mb="xl">
-                {appMovilActual.descripcion ||
-                  "App para cargar reportes de campo desde el celular, sin conexión."}
-              </Text>
-              <Button
-                leftSection={<IconDownload size={16} />}
-                color="green.7"
-                variant="light"
-                fullWidth
-                onClick={() => window.open(appMovilUrl, "_blank")}
-              >
-                Descargar APK
-              </Button>
-            </Card>
-          )}
+          {/* TARJETA ÚNICA DE APP MÓVIL — siempre visible, con o sin versión publicada */}
+          <Card withBorder radius="md" p="xl" className={classes.cardHover}>
+            <CustomThemeIcon color="green">
+              <IconDownload size={22} />
+            </CustomThemeIcon>
+            <Group gap="xs" align="center" mt="md" mb={4}>
+              <Title order={4} fw={800}>
+                {appMovilActual?.nombre?.toUpperCase() || "APP MÓVIL"}
+              </Title>
+              {appMovilActual?.version && (
+                <Badge variant="outline" color="green" size="sm">
+                  v{appMovilActual.version}
+                </Badge>
+              )}
+            </Group>
+            <Text size="xs" c="dimmed" mb="xl">
+              {appMovilActual
+                ? appMovilActual.descripcion ||
+                  "App para cargar reportes de campo desde el celular, sin conexión."
+                : "Acá vas a poder descargar la aplicación móvil apenas publiquemos una versión."}
+            </Text>
+            <Button
+              leftSection={<IconDownload size={16} />}
+              color="green.7"
+              variant="light"
+              fullWidth
+              disabled={!appMovilActual}
+              onClick={() => appMovilUrl && window.open(appMovilUrl, "_blank")}
+            >
+              {appMovilActual ? "Descargar APK" : "Todavía no disponible"}
+            </Button>
+          </Card>
 
           {areas.map((area) => {
             const formsDeEstaArea = formsByArea[area.id] || [];
