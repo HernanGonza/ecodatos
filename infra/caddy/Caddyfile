@@ -1,0 +1,73 @@
+{
+    admin off
+}
+
+:80 {
+    
+    # -------------------------------
+    # SUPABASE CORE (KONG)
+    # -------------------------------
+    handle /auth/v1/* {
+        reverse_proxy kong:8000
+    }
+    handle /rest/v1/* {
+        reverse_proxy kong:8000
+    }
+    handle /storage/v1/* {
+        reverse_proxy kong:8000
+    }
+    handle /functions/v1/* {
+        reverse_proxy kong:8000
+    }
+    # -------------------------------
+    # SUPABASE STUDIO
+    # -------------------------------
+    handle /studio/* {
+        reverse_proxy supabase-studio:3000
+    }
+    # -------------------------------
+    # NATS MONITOR (HTTP)
+    # -------------------------------
+    handle_path /nats/monitor/* {
+        reverse_proxy supabase-nats:8222
+    }
+    # -------------------------------
+    # NATS WEBSOCKET (BYPASS TOTAL)
+    # -------------------------------
+    handle_path /nats/ws* {
+        reverse_proxy supabase-nats:4443 {
+            header_up Host {host}
+            header_up Upgrade "websocket"
+            header_up Connection "Upgrade"
+            header_up -Origin
+            header_up -Sec-WebSocket-Origin
+            header_up -Sec-Websocket-Extensions
+            header_up -X-Forwarded-For
+        }
+    }
+    # -------------------------------
+    # FRONTEND - ASSETS
+    # -------------------------------
+    handle /assets/* {
+	root * /srv/front
+	file_server
+    }
+    # -------------------------------
+    # FRONTEND SPA
+    # -------------------------------
+    handle {
+	root * /srv/front
+	try_files {path} /index.html
+	file_server
+    }
+    # -------------------------------
+    # HEADERS
+    # -------------------------------
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Strict-Transport-Security
+        Cross-Origin-Embedder-Policy "credentialless"
+        Cross-Origin-Opener-Policy "same-origin-allow-popups"
+    }
+}

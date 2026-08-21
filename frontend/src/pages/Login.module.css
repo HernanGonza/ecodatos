@@ -1,0 +1,40 @@
+/* src/pages/Login.module.css */
+
+.loginContainer {
+  transition: background-color 0.4s ease;
+}
+
+.paperCard {
+  /* Elevación pura sin desenfoques raros */
+  border-color: var(--mantine-color-gray-2);
+}
+
+:global([data-mantine-color-scheme='dark']) .paperCard {
+  border-color: var(--mantine-color-gray-7);
+}
+
+/* El famoso focus ring de Chakra */
+.inputField {
+  transition: all 0.2s ease;
+  border-width: 1px;
+}
+
+.inputField:focus {
+  border-color: var(--mantine-color-cyan-5) !important;
+  box-shadow: 0 0 0 1px var(--mantine-color-cyan-5) !important;
+}
+
+.labelStyle {
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Transición limpia para el botón */
+.loginButton {
+  transition: transform 0.1s ease;
+}
+
+.loginButton:active {
+  transform: scale(0.98);
+}

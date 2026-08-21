@@ -1,0 +1,335 @@
+/* ============================================================================
+   WRAPPER PRINCIPAL
+   ============================================================================ */
+.tableWrapper {
+  height: 100%;
+  background-color: var(--mantine-color-body);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   BARRA DE BÚSQUEDA
+   ============================================================================ */
+.searchHeader {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+  flex-shrink: 0;
+  background-color: var(--mantine-color-body);
+  z-index: 20;
+}
+
+:global([data-mantine-color-scheme='dark']) .searchHeader {
+  border-bottom-color: var(--mantine-color-gray-8);
+  background-color: var(--mantine-color-dark-8);
+}
+
+/* ============================================================================
+   CONTENEDOR DE SCROLL
+   ============================================================================ */
+.tableScrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scrollContainer {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mantine-color-gray-4) transparent;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4);
+  border-radius: 3px;
+}
+
+/* ============================================================================
+   TABLA
+   ============================================================================ */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: 100%;
+}
+
+/* ============================================================================
+   THEAD
+   ============================================================================ */
+.thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.th {
+  background-color: var(--mantine-color-gray-1);
+  border-bottom: 2px solid var(--mantine-color-gray-3);
+  padding: 0;
+  font-weight: 700;
+  white-space: nowrap;
+  user-select: none;
+  overflow: hidden;
+  border-right: 1px solid var(--mantine-color-gray-3);
+}
+
+:global([data-mantine-color-scheme='dark']) .th {
+  background-color: var(--mantine-color-dark-6);
+  border-bottom-color: var(--mantine-color-dark-4);
+    border-right-color: var(--mantine-color-dark-4);
+
+}
+
+.thContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  height: 40px;
+}
+
+.headerText {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-gray-7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+:global([data-mantine-color-scheme='dark']) .headerText {
+  color: var(--mantine-color-gray-4);
+}
+
+.sortIcon {
+  color: var(--mantine-color-gray-5);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================================================
+   RESIZE HANDLE
+   ============================================================================ */
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 150ms ease;
+  z-index: 1;
+}
+
+.resizeHandle:hover,
+.resizeHandleActive {
+  background: var(--mantine-color-cyan-5);
+}
+
+/* ============================================================================
+   FILAS Y CELDAS
+   ============================================================================ */
+.tr {
+  transition: background-color 80ms ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tr:hover {
+  background-color: var(--mantine-color-cyan-0) !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .tr:hover {
+  background-color: rgba(6, 182, 212, 0.08) !important;
+}
+
+.rowSelected {
+  background-color: #e8fbff !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .rowSelected {
+  background-color: rgba(6, 182, 212, 0.12) !important;
+}
+
+.td {
+  padding: 0 12px;
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  border-right: 1px solid var(--mantine-color-gray-2);
+  vertical-align: middle;
+  overflow: hidden;
+  height: 48px;
+  text-align: center;
+}
+
+:global([data-mantine-color-scheme='dark']) .td {
+  border-bottom-color: var(--mantine-color-dark-4);
+  border-right-color: var(--mantine-color-dark-5);
+}
+
+.cellText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mantine-color-dark-7);
+  font-size: 13px;
+}
+
+:global([data-mantine-color-scheme='dark']) .cellText {
+  color: var(--mantine-color-gray-2);
+}
+
+/* ============================================================================
+   COLUMNA STICKY (CHECKBOXES)
+   ============================================================================ */
+.stickyColumn {
+  position: sticky !important;
+  left: 0;
+  z-index: 5;
+  background-color: inherit;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.06);
+}
+
+.thead .stickyColumn {
+  z-index: 12 !important;
+  background-color: var(--mantine-color-gray-1) !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .thead .stickyColumn {
+  background-color: var(--mantine-color-dark-6) !important;
+}
+
+.rowSelected .stickyColumn {
+  background-color: #e8fbff !important;
+}
+
+:global([data-mantine-color-scheme='dark']) .rowSelected .stickyColumn {
+  background-color: rgba(6, 182, 212, 0.12) !important;
+}
+
+/* ============================================================================
+   ACTION PILL
+   ============================================================================ */
+.actionPillContainer {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.actionPill {
+  pointer-events: all;
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: var(--mantine-color-body);
+  border: 2px solid var(--mantine-color-cyan-5);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.2), 0 2px 8px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.actionPill:hover {
+  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.3), 0 4px 12px rgba(0,0,0,0.12);
+}
+
+:global([data-mantine-color-scheme='dark']) .actionPill {
+  background: var(--mantine-color-dark-7);
+  border-color: var(--mantine-color-cyan-6);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .searchHeader {
+    padding: 10px 12px;
+  }
+
+  .actionPill {
+    padding: 8px 16px;
+  }
+}
+
+.rowResizeHandle {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background 150ms ease;
+  width: 100%;
+}
+
+.rowResizeHandle:hover {
+  background: var(--mantine-color-cyan-4);
+}
+
+.tr:nth-child(even) {
+  background-color: var(--mantine-color-gray-0);
+}
+
+:global([data-mantine-color-scheme='dark']) .tr:nth-child(even) {
+  background-color: var(--mantine-color-dark-7);
+}
+
+.scrollShadowRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.35));
+  pointer-events: none;
+  z-index: 8;
+}
+
+:global([data-mantine-color-scheme='dark']) .scrollShadowRight {
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.75));
+}
+
+.columnFilter {
+  padding: 4px 8px 6px;
+}
+
+.columnFilterInput {
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 11px;
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 4px;
+  background: var(--mantine-color-white);
+  color: var(--mantine-color-dark-7);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.columnFilterInput:focus {
+  border-color: var(--mantine-color-cyan-5);
+}
+
+:global([data-mantine-color-scheme='dark']) .columnFilterInput {
+  background: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-dark-4);
+  color: var(--mantine-color-gray-2);
+}
+
+:global([data-mantine-color-scheme='dark']) .columnFilterInput:focus {
+  border-color: var(--mantine-color-cyan-6);
+}

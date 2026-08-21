@@ -1,0 +1,58 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.logoContainer {
+    position: relative;
+    width: 220px; /* Tamaño un poco más imponente */
+    height: 220px;
+}
+
+.logoBase {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(1) opacity(0.15); /* Muy sutil al fondo */
+}
+
+.logoFillWrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    overflow: hidden;
+    animation: waveFill 3s ease-in-out infinite;
+}
+
+.logoFill {
+    width: 220px; /* Exactamente igual al contenedor */
+    height: 220px; /* Exactamente igual al contenedor */
+    object-fit: contain;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+@keyframes waveFill {
+    0% { height: 0%; }
+    70% { height: 100%; }
+    100% { height: 100%; }
+}
+
+.loadingText {
+    letter-spacing: 5px;
+    text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+}
+
+:global([data-mantine-color-scheme='dark']) .logoBase {
+    filter: grayscale(1) invert(1) opacity(0.05);
+}

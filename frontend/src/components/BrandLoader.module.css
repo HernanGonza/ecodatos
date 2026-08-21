@@ -1,0 +1,62 @@
+.overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.logoContainer {
+    position: relative;
+    width: 400px;  /* Tamaño fijo del contenedor */
+    height: 400px;
+}
+
+.logoBase {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+    filter: grayscale(1) opacity(0.1);
+}
+
+/* MODIFICACIÓN PARA MODO OSCURO */
+/* Invertimos los colores para que lo negro sea blanco */
+[data-mantine-color-scheme='dark'] .logoBase {
+    filter: invert(1) grayscale(1) opacity(0.15);
+}
+
+.logoFillWrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 400px; /* Mismo tamaño que el contenedor */
+    overflow: hidden;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end; /* Alinea el contenido abajo para que el llenado sea real */
+}
+
+.logoFill {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+    /* Evita que la imagen se mueva mientras el wrapper crece */
+    display: block; 
+}
+
+/* Si el logoFill también tiene letras negras que no se ven: */
+[data-mantine-color-scheme='dark'] .logoFill {
+    /* brightness(2) sube la luz de los colores oscuros sin perder el matiz */
+    filter: brightness(1.5) contrast(1.2); 
+    /* O si querés que las letras negras sean blancas puras: */
+    /* filter: invert(1) hue-rotate(180deg); */
+}
+
+.loadingText {
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+[data-mantine-color-scheme='dark'] .loadingText {
+    color: var(--mantine-color-dark-0);
+}
