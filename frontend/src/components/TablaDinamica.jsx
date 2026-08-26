@@ -45,6 +45,8 @@ import {
   IconLayoutColumns,
   IconPlus,
   IconMicrophone,
+  IconLink,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import {
   useReactTable,
@@ -56,9 +58,31 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { notifications } from "@mantine/notifications";
 import { supabase } from "../lib/supabase";
+import PanelVinculaciones from "./PanelVinculaciones";
 import classes from "./TablaDinamica.module.css";
 
 const ROW_HEIGHT = 48;
+
+const csvEscape = (value) => {
+  const str = String(value ?? "");
+  if (/[",\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+const formatValueForExport = (key, val) => {
+  if (key === "fotos" || key === "audios") {
+    return Array.isArray(val) ? val.length : 0;
+  }
+  if ((key === "created_at" || key === "updated_at") && val) {
+    return new Date(val).toLocaleString();
+  }
+  if (val === null || val === undefined) return "";
+  if (Array.isArray(val)) return val.join("; ");
+  if (typeof val === "object") return JSON.stringify(val);
+  return String(val);
+};
 
 const MemoizedCell = ({ value, columnKey, isUserTable, onOpenFoto }) => {
   const val = value;
@@ -212,6 +236,34 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
   const [rowHeights, setRowHeights] = useState({});
   const [fotoModalUrl, setFotoModalUrl] = useState(null);
   const abrirFotoModal = useCallback((url) => setFotoModalUrl(url), []);
+  const [vinculosRecordId, setVinculosRecordId] = useState(null);
+  const [vinculosCounts, setVinculosCounts] = useState({});
+
+  const fetchVinculosCounts = useCallback(async () => {
+    if (!formulario?.slug || formulario.slug === "users") {
+      setVinculosCounts({});
+      return;
+    }
+    try {
+      const { data: rows, error } = await supabase
+        .from("vinculaciones")
+        .select("tabla_origen, registro_origen_id, tabla_destino, registro_destino_id")
+        .or(`tabla_origen.eq.${formulario.slug},tabla_destino.eq.${formulario.slug}`);
+      if (error) throw error;
+      const counts = {};
+      (rows || []).forEach((v) => {
+        if (v.tabla_origen === formulario.slug) {
+          counts[v.registro_origen_id] = (counts[v.registro_origen_id] || 0) + 1;
+        }
+        if (v.tabla_destino === formulario.slug) {
+          counts[v.registro_destino_id] = (counts[v.registro_destino_id] || 0) + 1;
+        }
+      });
+      setVinculosCounts(counts);
+    } catch {
+      setVinculosCounts({});
+    }
+  }, [formulario?.slug]);
 
   const scrollRef = useRef(null);
   const isOrphanMode = formulario?.isOrphanMode;
@@ -279,8 +331,11 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
   };
 
   useEffect(() => {
-    if (formulario?.slug) fetchData(); 
-}, [formulario?.slug, isOrphanMode]);
+    if (formulario?.slug) {
+      fetchData();
+      fetchVinculosCounts();
+    }
+}, [formulario?.slug, isOrphanMode, fetchVinculosCounts]);
 
   const handleBulkReassign = async () => {
     if (!selectedTecnico) return;
@@ -410,6 +465,46 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
       });
     }
 
+    if (!isOrphanMode && formulario?.slug !== "users") {
+      cols.push({
+        id: "vinculaciones_badge",
+        header: "VÍNCULOS",
+        size: 90,
+        enableResizing: false,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const rid = String(row.original.id || row.original.user_id);
+          const count = vinculosCounts[rid] || 0;
+          return (
+            <Group
+              gap={4}
+              wrap="nowrap"
+              justify="center"
+              style={{ cursor: "pointer", width: "100%" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setVinculosRecordId(rid);
+              }}
+            >
+              <IconLink
+                size={14}
+                color={
+                  count > 0
+                    ? "var(--mantine-color-grape-6)"
+                    : "var(--mantine-color-gray-5)"
+                }
+              />
+              {count > 0 && (
+                <Badge size="xs" variant="filled" color="grape" radius="xl">
+                  {count}
+                </Badge>
+              )}
+            </Group>
+          );
+        },
+      });
+    }
+
     if (isOrphanMode) {
       cols.push({
         id: "estado_huerfano",
@@ -449,7 +544,7 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
     });
 
     return cols;
-  }, [data, isOrphanMode, formulario?.slug, esEditorDelForm, abrirFotoModal]);
+  }, [data, isOrphanMode, formulario?.slug, esEditorDelForm, abrirFotoModal, vinculosCounts]);
 
   const table = useReactTable({
   data,
@@ -469,6 +564,33 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
 })
 
   const { rows } = table.getRowModel();
+
+  const exportarCSV = () => {
+    const columnasExport = table
+      .getVisibleLeafColumns()
+      .filter((col) => !["select", "estado_huerfano", "vinculaciones_badge"].includes(col.id));
+
+    const encabezados = columnasExport.map((col) => String(col.columnDef.header));
+    const filas = rows.map((row) =>
+      columnasExport.map((col) => formatValueForExport(col.id, row.original[col.id])),
+    );
+
+    const csv = [encabezados, ...filas]
+      .map((fila) => fila.map(csvEscape).join(","))
+      .join("\n");
+
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const nombreArchivo = `${formulario?.slug || "export"}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.href = url;
+    link.download = nombreArchivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
   const el = scrollRef.current
   if (!el) return
@@ -568,6 +690,17 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
           </Stack>
         </Popover.Dropdown>
       </Popover>
+      <Button
+        variant="light"
+        color="teal"
+        size="sm"
+        radius="md"
+        leftSection={<IconFileSpreadsheet size={15} />}
+        onClick={exportarCSV}
+        disabled={rows.length === 0}
+      >
+        Exportar CSV
+      </Button>
       {esEditorDelForm && onNew && (
     <Button
       variant="filled"
@@ -794,6 +927,17 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
                       >
                         EDITAR
                       </Button>
+                      {formulario?.slug !== "users" && (
+                        <Button
+                          variant="light"
+                          color="grape"
+                          size="compact-sm"
+                          leftSection={<IconLink size={14} />}
+                          onClick={() => setVinculosRecordId(selectedRowsIds[0])}
+                        >
+                          VÍNCULOS
+                        </Button>
+                      )}
                     </>
                   )}
                   {isOrphanMode ? (
@@ -931,6 +1075,16 @@ const TablaDinamica = forwardRef(({ formulario, onEdit, onView, onNew }, ref) =>
           />
         )}
       </Modal>
+
+      <PanelVinculaciones
+        tabla={formulario?.slug}
+        registroId={vinculosRecordId}
+        opened={!!vinculosRecordId}
+        onClose={() => {
+          setVinculosRecordId(null);
+          fetchVinculosCounts();
+        }}
+      />
     </Box>
   );
 });

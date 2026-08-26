@@ -31,9 +31,11 @@ import {
   IconPlus,
   IconPhoto,
   IconMicrophone,
+  IconLink,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { supabase } from "../lib/supabase";
+import PanelVinculaciones from "./PanelVinculaciones";
 import classes from "./FormularioDinamico.module.css";
 
 // --- IMPORTACIONES PARA EL MAPA ---
@@ -197,6 +199,26 @@ export default function FormularioDinamico({
   const [inlineAddValue, setInlineAddValue] = useState("");
   const [inlineAddLoading, setInlineAddLoading] = useState(false);
   const [foreignDataLoaded, setForeignDataLoaded] = useState(false);
+
+  const [vinculosOpen, setVinculosOpen] = useState(false);
+  const [vinculos, setVinculos] = useState([]);
+
+  const fetchVinculos = async () => {
+    if (!slug || slug === "users" || !initialData?.id) {
+      setVinculos([]);
+      return;
+    }
+    const { data, error } = await supabase.rpc("listar_vinculaciones", {
+      p_tabla: slug,
+      p_id: initialData.id,
+    });
+    if (!error) setVinculos(data || []);
+  };
+
+  useEffect(() => {
+    fetchVinculos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, initialData?.id]);
 
   const [isEditingLocally, setIsEditingLocally] = useState(false);
   const isEffectivelyReadOnly = readOnly && !isEditingLocally;
@@ -530,6 +552,40 @@ export default function FormularioDinamico({
                 )}
               </Text>
             </Box>
+
+            {initialData?.id && slug !== "users" && (
+              <Paper withBorder p="sm" radius="md">
+                <Group justify="space-between" wrap="wrap" gap="xs">
+                  <Group gap="xs" wrap="wrap">
+                    <IconLink size={16} />
+                    <Text size="sm" fw={700}>
+                      {vinculos.length > 0
+                        ? `${vinculos.length} vínculo${vinculos.length > 1 ? "s" : ""}`
+                        : "Sin vínculos"}
+                    </Text>
+                    {vinculos.map((v) => (
+                      <Badge
+                        key={v.vinculacion_id}
+                        variant="light"
+                        color="grape"
+                        size="sm"
+                      >
+                        {v.area_nombre || v.tabla_relacionada}
+                      </Badge>
+                    ))}
+                  </Group>
+                  <Button
+                    variant="light"
+                    color="grape"
+                    size="xs"
+                    leftSection={<IconLink size={14} />}
+                    onClick={() => setVinculosOpen(true)}
+                  >
+                    Vínculos
+                  </Button>
+                </Group>
+              </Paper>
+            )}
 
             <Divider color="gray.8" />
 
@@ -990,6 +1046,16 @@ export default function FormularioDinamico({
           />
         )}
       </Modal>
+
+      <PanelVinculaciones
+        tabla={slug}
+        registroId={initialData?.id}
+        opened={vinculosOpen}
+        onClose={() => {
+          setVinculosOpen(false);
+          fetchVinculos();
+        }}
+      />
     </>
   );
 }
