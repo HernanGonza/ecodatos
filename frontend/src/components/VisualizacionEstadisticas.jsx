@@ -312,9 +312,29 @@ export default function VisualizacionEstadisticas({ formulario }) {
     try {
       let query = supabase.from(formulario.slug).select("*").eq("activo", true);
       if (fechaRango?.length === 2 && fechaRango[0] && fechaRango[1]) {
-        query = query
-          .gte("created_at", dayjs(fechaRango[0]).startOf("day").toISOString())
-          .lte("created_at", dayjs(fechaRango[1]).endOf("day").toISOString());
+        const desdeISO = dayjs(fechaRango[0]).startOf("day").toISOString();
+        const hastaISO = dayjs(fechaRango[1]).endOf("day").toISOString();
+
+        // Filtrar por las columnas de fecha reales del registro (ej. "fecha",
+        // "fecha_actuacion", etc.), no por created_at: created_at es cuándo
+        // se cargó el dato al sistema, no cuándo ocurrió el hecho. Un
+        // registro entra si CUALQUIERA de sus columnas de fecha cae en el
+        // rango. Si la tabla no tiene ninguna columna de fecha propia, se
+        // usa created_at como respaldo.
+        const camposFecha = metadata
+          .filter(
+            (f) =>
+              (f.tipo === "date" || f.tipo?.includes("timestamp")) &&
+              !["created_at", "updated_at"].includes(f.campo)
+          )
+          .map((f) => f.campo);
+
+        const columnas = camposFecha.length > 0 ? camposFecha : ["created_at"];
+        query = query.or(
+          columnas
+            .map((campo) => `and(${campo}.gte.${desdeISO},${campo}.lte.${hastaISO})`)
+            .join(",")
+        );
       }
       const { data: records, error } = await query;
       if (!error) {
@@ -324,7 +344,7 @@ export default function VisualizacionEstadisticas({ formulario }) {
     } finally {
       setLoading(false);
     }
-  }, [formulario?.slug, fechaRango]);
+  }, [formulario?.slug, fechaRango, metadata]);
 
   useEffect(() => {
     fetchData();
