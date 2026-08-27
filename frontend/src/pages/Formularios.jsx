@@ -38,6 +38,7 @@ import {
   IconSettingsAutomation,
   IconDownload,
   IconMap2,
+  IconUpload,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useNavigate, useMatch } from "react-router-dom";
@@ -54,6 +55,7 @@ import FormularioSolicitud from "../components/FormularioSolicitud";
 import MisSolicitudes from "../components/MisSolicitudes";
 import TablaSolicitudes from "../components/TablaSolicitudes";
 import CrearFormulario from "../components/CrearFormulario";
+import SubirAppMovil from "../components/SubirAppMovil";
 import classes from "./Formularios.module.css";
 
 export default function Formularios() {
@@ -81,7 +83,8 @@ export default function Formularios() {
   const matchUsersRegistro    = useMatch("/formularios/usuarios/registro/:recordId");
   const matchUsersRegistroVer = useMatch("/formularios/usuarios/registro/:recordId/ver");
   const [mobileApps, setMobileApps] = useState([]);
-  
+  const [subirAppOpen, setSubirAppOpen] = useState(false);
+
 
   // Parámetros activos — los matches más específicos tienen prioridad
   const activeAreaKey = matchRegistroVer?.params.areaKey
@@ -712,6 +715,18 @@ await fetchMobileApps();
             >
               {appMovilActual ? "Descargar APK" : "Todavía no disponible"}
             </Button>
+            {userRole === "superadmin" && (
+              <Button
+                mt="sm"
+                leftSection={<IconUpload size={16} />}
+                color="cyan.6"
+                variant="outline"
+                fullWidth
+                onClick={() => setSubirAppOpen(true)}
+              >
+                Subir nueva versión
+              </Button>
+            )}
           </Card>
 
           {areas.map((area) => {
@@ -1172,6 +1187,19 @@ await fetchMobileApps();
           )}
         </ScrollArea>
       </Drawer>
+
+      {/* MODAL SUBIR NUEVA VERSIÓN DE LA APP MÓVIL (Solo Superadmin) */}
+      {userRole === "superadmin" && (
+        <SubirAppMovil
+          opened={subirAppOpen}
+          onClose={() => setSubirAppOpen(false)}
+          appActual={appMovilActual}
+          onSuccess={() => {
+            setSubirAppOpen(false);
+            fetchMobileApps();
+          }}
+        />
+      )}
     </Box>
   );
 }
