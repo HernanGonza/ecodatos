@@ -11,8 +11,8 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const tabla = url.searchParams.get('t'); 
-    if (!tabla) throw new Error("Falta el parámetro 't' (tabla)");
+    const tabla = url.searchParams.get('t');
+    if (!tabla) throw new Error("Falta el parametro 't' (tabla)");
 
     const isOrphans = url.searchParams.get('orphans') === 'true';
 
@@ -23,15 +23,12 @@ serve(async (req) => {
     )
 
     // ================================================================
-    // SELECT DINÁMICO CON JOINS
+    // SELECT DINAMICO CON JOINS (embeds de PostgREST)
     // ================================================================
     let selectFields = '*';
-
-    // Siempre intentamos traer los nombres (ya que todas tus tablas los tienen)
     selectFields += `,municipio_id:municipios(nombre)`;
     selectFields += `,departamento_id:departamentos(nombre)`;
-    
-    // 🔧 JOIN CONDICIONAL PARA ACTIVIDAD SEGÚN LA TABLA
+
     if (tabla === 'actuaciones_control_guardaparques') {
       selectFields += `,actividad_id:tipo_actividad_guardaparques(nombre)`;
     } else if (tabla === 'expedientes_impacto_ambiental') {
@@ -51,7 +48,7 @@ serve(async (req) => {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error(`❌ Error en tabla [${tabla}]: ${error.message}`);
+      console.error(`Error en tabla [${tabla}]: ${error.message}`);
       return new Response(JSON.stringify([]), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -59,7 +56,21 @@ serve(async (req) => {
     }
 
     // ================================================================
-    // FLATTENING MEJORADO + ELIMINACIÓN DE OBJETOS ANIDADOS
+    // LOOKUPS APARTE (evita embeds que cuelgan la query)
+    // ================================================================
+    const tipoActaMap: Record<string, string> = {};
+    if (tabla === 'actuaciones_control_guardaparques') {
+      const { data: tipos } = await supabase
+        .schema('public')
+        .from('tipo_acta_actuaciones')
+        .select('id, nombre');
+      for (const t of tipos || []) {
+        tipoActaMap[t.id] = t.nombre;
+      }
+    }
+
+    // ================================================================
+    // FLATTENING + ELIMINACION DE OBJETOS ANIDADOS
     // ================================================================
     const flattenedData = (data || []).map(row => {
       const newRow = { ...row };
@@ -80,13 +91,19 @@ serve(async (req) => {
         newRow.departamento_nombre = null;
       }
 
-      // 🔧 FLATTENING PARA ACTIVIDAD (actuaciones_control_guardaparques)
+      // --- Actividad (actuaciones_control_guardaparques) ---
       if (row.actividad_id && typeof row.actividad_id === 'object' && row.actividad_id !== null) {
         newRow.actividad_nombre = row.actividad_id.nombre || null;
         delete newRow.actividad_id;
       }
 
-      // 🔧 FLATTENING PARA TIPO_ACTIVIDAD (expedientes_impacto_ambiental)
+      // --- Tipo de acta (actuaciones_control_guardaparques) — via lookup en JS ---
+      if (typeof row.tipo_de_acta_id === 'string' && row.tipo_de_acta_id) {
+        newRow.tipo_de_acta_nombre = tipoActaMap[row.tipo_de_acta_id] || null;
+        delete newRow.tipo_de_acta_id;
+      }
+
+      // --- Tipo actividad (expedientes_impacto_ambiental) ---
       if (row.tipo_actividad_id && typeof row.tipo_actividad_id === 'object' && row.tipo_actividad_id !== null) {
         newRow.tipo_actividad_nombre = row.tipo_actividad_id.nombre || null;
         delete newRow.tipo_actividad_id;

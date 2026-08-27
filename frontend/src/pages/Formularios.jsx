@@ -18,7 +18,6 @@ import {
   useMantineColorScheme,
   Container,
   ThemeIcon,
-  List,
   LoadingOverlay,
 } from "@mantine/core";
 import {
