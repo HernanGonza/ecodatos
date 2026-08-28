@@ -33,6 +33,39 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userError || !user) throw new Error("No autenticado");
 
+    // 1b. Validar permiso de EDICIÓN sobre el formulario de la tabla
+    const { data: roleData } = await supabaseAdmin
+      .from("usuarios_rol")
+      .select(`roles!rol_id ( key )`)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const userRole = (roleData as any)?.roles?.key?.toLowerCase() || "usuario";
+    const isSuperAdmin = userRole === "superadmin" || userRole === "admin";
+
+    if (!isSuperAdmin) {
+      const { data: form } = await supabaseAdmin
+        .from("formularios")
+        .select("id")
+        .eq("slug", tabla)
+        .maybeSingle();
+
+      if (!form) {
+        throw new Error("No se encontró el formulario para esta tabla.");
+      }
+
+      const { data: permiso } = await supabaseAdmin
+        .from("usuarios_formularios")
+        .select("es_editor")
+        .eq("user_id", user.id)
+        .eq("formulario_id", form.id)
+        .maybeSingle();
+
+      if (!permiso || permiso.es_editor !== true) {
+        throw new Error("Permiso denegado: no tenés acceso de edición sobre este formulario.");
+      }
+    }
+
     // 2. PUBLICAR EN NATS
     const nc = await getNats();
     const js = nc.jetstream();

@@ -1,0 +1,20 @@
+registros generados: 869
+sin departamento_id: 20
+sin municipio_id: 21
+con geom: 427
+con fecha_mesa_entrada: 297
+id existente -> 870
+
+--- detalle ---
+CP 261: municipio SIN MATCH: Santa Rita -> ubicacion (dpto/muni vacíos)
+CP 278: municipio SIN MATCH: Colonia San Jorge -> ubicacion (dpto/muni vacíos)
+CP 305: municipio SIN MATCH: Belgrano -> ubicacion (dpto/muni vacíos)
+CP 307: municipio SIN MATCH: Miguel Lanus -> ubicacion (dpto/muni vacíos)
+CP 313: municipio SIN MATCH: Santa Ines -> ubicacion (dpto/muni vacíos)
+CP 344: municipio SIN MATCH: Piñalito -> ubicacion (dpto/muni vacíos)
+CP 386: municipio SIN MATCH: Colonia Las Tunas -> ubicacion (dpto/muni vacíos)
+CP 470: municipio SIN MATCH: Acaragua -> ubicacion (dpto/muni vacíos)
+fila 523: descartada (vacía)
+CP 699: fila partida en 2 (P1 id=699, P2 BIS id=867)
+CP 830: fila partida en 2 (P1 id=830, P2 BIS id=868)
+CP 849: fila partida en 2 (P1 id=849, P2 BIS id=869)

@@ -33,38 +33,29 @@ serve(async (req) => {
     const userRole = (roleData as any)?.roles?.key?.toLowerCase() || "usuario";
     const isSuperAdmin = userRole === "superadmin" || userRole === "admin";
 
-    // 2. Verificación de Seguridad
+    // 2. Verificación de permiso de EDICIÓN sobre el formulario de la tabla `t`.
+    // Cada tabla dinámica es un solo formulario, así que alcanza con chequear el
+    // formulario (no hace falta recorrer registro por registro).
     if (!isSuperAdmin) {
-      // 2a. Obtener Áreas vinculadas al usuario (desde la tabla usuarios_areas)
-      const { data: areasVinculadas } = await supabaseAdmin
-        .from("usuarios_areas")
-        .select("area_id")
-        .eq("user_id", user.id)
-        .eq("activo", true);
+      const { data: form } = await supabaseAdmin
+        .from("formularios")
+        .select("id")
+        .eq("slug", t)
+        .maybeSingle();
 
-      if (!areasVinculadas || areasVinculadas.length === 0) {
-        throw new Error("Tu usuario no tiene áreas asignadas.");
+      if (!form) {
+        throw new Error("No se encontró el formulario para esta tabla.");
       }
 
-      // Creamos un Set de IDs de área para búsqueda rápida
-      const userAreaIds = new Set(areasVinculadas.map(a => a.area_id));
+      const { data: permiso } = await supabaseAdmin
+        .from("usuarios_formularios")
+        .select("es_editor")
+        .eq("user_id", user.id)
+        .eq("formulario_id", form.id)
+        .maybeSingle();
 
-      // 2b. Traer registros con el área de su formulario padre
-      const { data: registros, error: fetchErr } = await supabaseAdmin
-        .from(t)
-        .select(`id, formularios!formulario_id ( area_id )`)
-        .in("id", targetIds);
-
-      if (fetchErr) throw fetchErr;
-
-      for (const reg of registros || []) {
-        const recordAreaId = (reg.formularios as any)?.area_id;
-
-        // Validamos si el área del registro está entre las áreas del usuario
-        if (!userAreaIds.has(recordAreaId)) {
-          console.error(`PERMISO DENEGADO: El registro ${reg.id} pertenece al área ${recordAreaId}, pero tú tienes acceso a:`, Array.from(userAreaIds));
-          throw new Error("Permiso denegado: El registro pertenece a un área fuera de tu jurisdicción.");
-        }
+      if (!permiso || permiso.es_editor !== true) {
+        throw new Error("Permiso denegado: no tenés acceso de edición sobre este formulario.");
       }
     }
 

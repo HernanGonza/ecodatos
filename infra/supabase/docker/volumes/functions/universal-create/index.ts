@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "npm:@supabase/supabase-js"
 import { getNats } from "../_shared/nats.ts"
 import { StringCodec } from "https://deno.land/x/nats@v1.16.0/src/mod.ts";
 
@@ -18,6 +19,49 @@ serve(async (req) => {
     if (!tabla || !record) {
       throw new Error("Faltan datos: tabla o registro");
     }
+
+    // --- AUTORIZACIÓN: sesión + permiso de edición sobre el formulario ---
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const authHeader = req.headers.get('Authorization');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(authHeader?.replace("Bearer ", "")!);
+    if (authError || !user) throw new Error("No autorizado");
+
+    const { data: roleData } = await supabaseAdmin
+      .from("usuarios_rol")
+      .select(`roles!rol_id ( key )`)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const userRole = (roleData as any)?.roles?.key?.toLowerCase() || "usuario";
+    const isSuperAdmin = userRole === "superadmin" || userRole === "admin";
+
+    if (!isSuperAdmin) {
+      const { data: form } = await supabaseAdmin
+        .from("formularios")
+        .select("id")
+        .eq("slug", tabla)
+        .maybeSingle();
+
+      if (!form) {
+        throw new Error("No se encontró el formulario para esta tabla.");
+      }
+
+      const { data: permiso } = await supabaseAdmin
+        .from("usuarios_formularios")
+        .select("es_editor")
+        .eq("user_id", user.id)
+        .eq("formulario_id", form.id)
+        .maybeSingle();
+
+      if (!permiso || permiso.es_editor !== true) {
+        throw new Error("Permiso denegado: no tenés acceso de edición sobre este formulario.");
+      }
+    }
+    // --- FIN AUTORIZACIÓN ---
 
     console.log(`[CREATE] Intentando publicar en NATS para tabla: ${tabla}`);
 

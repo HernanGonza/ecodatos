@@ -61,14 +61,21 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
           const tieneLectura = resUserAreas.data?.some(a => !a.es_editor) || resUserForms.data?.some(f => !f.es_editor);
           if (tieneLectura) setMostrarLectura(true);
 
+          // Un formulario nunca puede estar en edición y lectura a la vez: si por
+          // datos viejos aparece en ambos, gana edición.
+          const formsEditIds = resUserForms.data?.filter(f => f.es_editor).map(f => String(f.formulario_id)) || [];
+          const formsReadIds = resUserForms.data
+            ?.filter(f => !f.es_editor && !formsEditIds.includes(String(f.formulario_id)))
+            .map(f => String(f.formulario_id)) || [];
+
           setFormData({
             nombre_completo: selectedRecord.nombre_completo || '',
             email: selectedRecord.email || '',
             rol_id: currentRol ? String(currentRol.id) : '',
             areas_edit: resUserAreas.data?.filter(a => a.es_editor).map(a => String(a.area_id)) || [],
             areas_read: resUserAreas.data?.filter(a => !a.es_editor).map(a => String(a.area_id)) || [],
-            forms_edit: resUserForms.data?.filter(f => f.es_editor).map(f => String(f.formulario_id)) || [],
-            forms_read: resUserForms.data?.filter(f => !f.es_editor).map(f => String(f.formulario_id)) || [],
+            forms_edit: formsEditIds,
+            forms_read: formsReadIds,
           });
         }
       } catch (err) { 
@@ -83,8 +90,12 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
     ? todosLosFormularios 
     : todosLosFormularios.filter(f => formData.areas_edit.includes(String(f.area_id)));
 
-  // Filtrado de formularios para LECTURA (Todos los de las áreas seleccionadas en lectura)
-  const formsReadDisponibles = todosLosFormularios.filter(f => formData.areas_read.includes(String(f.area_id)));
+  // Filtrado de formularios para LECTURA: de cualquier área asignada al usuario
+  // (edición o lectura), menos los que ya están marcados como edición.
+  const areasConAcceso = [...new Set([...formData.areas_edit, ...formData.areas_read])];
+  const formsReadDisponibles = todosLosFormularios.filter(
+    (f) => areasConAcceso.includes(String(f.area_id)) && !formData.forms_edit.includes(String(f.id))
+  );
 
   const handleRolChange = (val) => {
     const newRol = roles.find(r => String(r.id) === String(val));
@@ -169,7 +180,7 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
               <Box>
                 <Text fw={700} size="xs" c="dimmed" mb={5}>FORMULARIOS PARA EDITAR</Text>
                 <Paper p="md" withBorder>
-                  <Checkbox.Group value={formData.forms_edit} onChange={(val) => setFormData(prev => ({ ...prev, forms_edit: val }))}>
+                  <Checkbox.Group value={formData.forms_edit} onChange={(val) => setFormData(prev => ({ ...prev, forms_edit: val, forms_read: prev.forms_read.filter((id) => !val.includes(id)) }))}>
                     <Stack gap="xs">
                       {formsEditDisponibles.map((f) => (
                         <Checkbox key={f.id} value={String(f.id)} label={f.nombre} disabled={isReadOnly || isAdminOrSuper} />
@@ -182,9 +193,9 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
 
             {/* --- SECCIÓN LECTURA --- */}
             <Box mt="xl">
-              <Checkbox 
-                label="¿Necesita tener acceso de lectura a otras áreas?" 
-                checked={mostrarLectura} 
+              <Checkbox
+                label="¿Necesita acceso de solo lectura a formularios que no edita?"
+                checked={mostrarLectura}
                 onChange={(event) => setMostrarLectura(event.currentTarget.checked)}
                 disabled={isReadOnly}
               />
@@ -192,9 +203,15 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
               <Collapse in={mostrarLectura}>
                 <Stack mt="md" gap="lg">
                   <Divider label="Permisos de Lectura" labelPosition="center" color="blue" />
-                  
+
+                  <Text size="xs" c="dimmed">
+                    Podés marcar como lectura formularios de áreas que este usuario también edita
+                    (para que vea los registros de sus compañeros sin poder modificarlos), o sumar
+                    áreas nuevas de solo lectura.
+                  </Text>
+
                   <Box>
-                    <Text fw={700} size="xs" c="blue" mb={5}>ÁREAS DE SOLO LECTURA</Text>
+                    <Text fw={700} size="xs" c="blue" mb={5}>ÁREAS DE SOLO LECTURA (opcional)</Text>
                     <Paper p="md" withBorder style={{ borderColor: 'var(--mantine-color-blue-2)' }}>
                       <Checkbox.Group value={formData.areas_read} onChange={(val) => setFormData(prev => ({ ...prev, areas_read: val }))}>
                         <SimpleGrid cols={2}>
@@ -215,7 +232,7 @@ export default function FormularioUsuario({ selectedRecord, isReadOnly, onSucces
                     <Box>
                       <Text fw={700} size="xs" c="blue" mb={5}>FORMULARIOS DE SOLO LECTURA</Text>
                       <Paper p="md" withBorder style={{ borderColor: 'var(--mantine-color-blue-2)' }}>
-                        <Checkbox.Group value={formData.forms_read} onChange={(val) => setFormData(prev => ({ ...prev, forms_read: val }))}>
+                        <Checkbox.Group value={formData.forms_read} onChange={(val) => setFormData(prev => ({ ...prev, forms_read: val, forms_edit: prev.forms_edit.filter((id) => !val.includes(id)) }))}>
                           <Stack gap="xs">
                             {formsReadDisponibles.map((f) => (
                               <Checkbox 

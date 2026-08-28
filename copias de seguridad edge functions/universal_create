@@ -1,0 +1,60 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { getNats } from "../_shared/nats.ts"
+import { StringCodec } from "https://deno.land/x/nats@v1.16.0/src/mod.ts";
+
+const sc = StringCodec();
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    const body = await req.json();
+    const { t: tabla, data: record } = body;
+
+    if (!tabla || !record) {
+      throw new Error("Faltan datos: tabla o registro");
+    }
+
+    console.log(`[CREATE] Intentando publicar en NATS para tabla: ${tabla}`);
+
+    const nc = await getNats();
+    const js = nc.jetstream();
+    const subject = `crud.create.${tabla}`;
+    
+    // 1. Publicar con await total
+    const pa = await js.publish(subject, sc.encode(JSON.stringify({ record })), { 
+      msgID: crypto.randomUUID() 
+    });
+    
+    // 2. IMPORTANTE: Forzar el vaciado del buffer de NATS
+    await nc.flush();
+    
+    console.log(`🚀 [CREATE] Confirmado por NATS en subject: ${subject} (Secuencia: ${pa.seq})`);
+
+    // --- DESPERTADOR ---
+    const WORKER_URL = "http://kong:8000/functions/v1/queue"; 
+    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    // No esperamos al despertador, lo lanzamos al aire
+    fetch(WORKER_URL, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${SERVICE_ROLE}` }
+    }).catch(() => {});
+
+    return new Response(JSON.stringify({ ok: true, message: "Operación en cola" }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 202,
+    });
+
+  } catch (error) {
+    console.error("🔥 [CREATE] Error:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    });
+  }
+})

@@ -88,7 +88,9 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
             areas_edit: rawAreas.filter(a => a.es_editor).map(a => String(a.id)),
             areas_read: rawAreas.filter(a => !a.es_editor).map(a => String(a.id)),
             forms_edit: rawForms.filter(f => f.es_editor).map(f => String(f.id)),
-            forms_read: rawForms.filter(f => !f.es_editor).map(f => String(f.id)),
+            forms_read: rawForms
+              .filter(f => !f.es_editor && !rawForms.some(e => e.es_editor && String(e.id) === String(f.id)))
+              .map(f => String(f.id)),
             tipo: initialData.tipo || 'registro',
             user_id: initialData.user_id,
             solicitud_id: initialData.estado === 'revision' ? initialData.id : null
@@ -114,8 +116,11 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
     ? todosLosFormularios
     : todosLosFormularios.filter(f => formData.areas_edit.includes(String(f.area_id)));
 
-  const formsReadDisponibles = todosLosFormularios.filter(f =>
-    formData.areas_read.includes(String(f.area_id))
+  // Formularios para LECTURA: de cualquier área asignada (edición o lectura),
+  // menos los que ya están marcados como edición.
+  const areasConAcceso = [...new Set([...formData.areas_edit, ...formData.areas_read])];
+  const formsReadDisponibles = todosLosFormularios.filter(
+    (f) => areasConAcceso.includes(String(f.area_id)) && !formData.forms_edit.includes(String(f.id))
   );
 
   const handleRolChange = (val) => {
@@ -338,7 +343,7 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
                 <Paper p="md" withBorder className={isAdminOrSuper || isReadOnly ? classes.areaPaperDisabled : classes.areaPaper}>
                   <Checkbox.Group
                     value={formData.forms_edit}
-                    onChange={(val) => !isReadOnly && setFormData(prev => ({ ...prev, forms_edit: val }))}
+                    onChange={(val) => !isReadOnly && setFormData(prev => ({ ...prev, forms_edit: val, forms_read: prev.forms_read.filter((id) => !val.includes(id)) }))}
                   >
                     <Stack gap="xs" className={classes.formListContainer}>
                       {(isReadOnly ? todosLosFormularios.filter(f => formData.forms_edit.includes(String(f.id))) : formsEditDisponibles).map((f) => (
@@ -360,7 +365,7 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
               <Box mt="xl">
                 {!isReadOnly && (
                   <Checkbox
-                    label="¿Necesita tener acceso de lectura a otras áreas?"
+                    label="¿Necesita acceso de solo lectura a formularios que no edita?"
                     checked={mostrarLectura}
                     onChange={(e) => setMostrarLectura(e.currentTarget.checked)}
                   />
@@ -373,8 +378,16 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
                       color="blue"
                     />
 
+                    {!isReadOnly && (
+                      <Text size="xs" c="dimmed">
+                        Podés marcar como lectura formularios de áreas que este usuario también edita
+                        (para que vea los registros de sus compañeros sin poder modificarlos), o sumar
+                        áreas nuevas de solo lectura.
+                      </Text>
+                    )}
+
                     <Box>
-                      <Text className={classes.label} c="blue" mb={5}>ÁREAS DE SOLO LECTURA</Text>
+                      <Text className={classes.label} c="blue" mb={5}>ÁREAS DE SOLO LECTURA (opcional)</Text>
                       <Paper p="md" withBorder style={{ borderColor: 'var(--mantine-color-blue-2)' }}>
                         <Checkbox.Group
                           value={formData.areas_read}
@@ -400,7 +413,7 @@ export default function FormularioSolicitud({ userRole, onSuccess, initialData, 
                         <Paper p="md" withBorder style={{ borderColor: 'var(--mantine-color-blue-2)' }}>
                           <Checkbox.Group
                             value={formData.forms_read}
-                            onChange={(val) => !isReadOnly && setFormData(prev => ({ ...prev, forms_read: val }))}
+                            onChange={(val) => !isReadOnly && setFormData(prev => ({ ...prev, forms_read: val, forms_edit: prev.forms_edit.filter((id) => !val.includes(id)) }))}
                           >
                             <Stack gap="xs" className={classes.formListContainer}>
                               {(isReadOnly 
